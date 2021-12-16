@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from src.classes import Entrenamiento, Saltos, CicloDeEntrenamiento
 from src.errors import DataError, InputDataError, CommandError, NoDataError, NumDataError, NoValidTimeError, RangeError
 from datetime import date
-
+import sys
+import os
 BASE_MESSAGE = '''
 Ingrese el entrenamiento en el siguiente formato:
 
@@ -128,45 +129,34 @@ def generate_image(training, fecha, titulo=''):
     '''Convert training to jpeg'''
     img = Image.new('RGB', (1000, 720), (255, 255, 255))
     draw = ImageDraw.Draw(img)
-    font_title = ImageFont.truetype("./images/Arial Unicode.ttf", 75)
-    font_tot_time = ImageFont.truetype("./images/Arial Unicode.ttf", 30)
-    logo = Image.open('./images/logo.jpeg')
+    font_title = ImageFont.truetype(
+        resource_path("./images/Arial Unicode.ttf"), 75)
+    font_tot_time = ImageFont.truetype(
+        resource_path("./images/Arial Unicode.ttf"), 30)
+    logo = Image.open(resource_path('./images/logo.jpeg'))
     size = (150, 150)
     logo.thumbnail(size)
     img.paste(logo, (0, 0))
-    #titulo = 'Día de la carrera larga'
-    #print(draw.textlength('Día de la carrera larga', font=font))
+    # titulo = 'Día de la carrera larga'
+    # print(draw.textlength('Día de la carrera larga', font=font))
     draw.text((175, 0), titulo, 0, font=font_title)
     draw.text((830, 90), fecha, 0, font=font_tot_time)
     draw.text((855, 120), training.get_time(), 0, font=font_tot_time)
     lst_images = list()
     for i in range(1, 10):
-        tmp_img = Image.open(f'./images/{i}.png')
+        tmp_img = Image.open(resource_path(f'./images/{i}.png'))
         size = (100, 100)
         tmp_img.thumbnail(size)
         lst_images.append(tmp_img)
-
-    # for el in lst_images:
-    #     img.paste(el, (eje_x, eje_y))
-    #     draw.text((eje_x - 50, eje_y + 25), '85%',
-    #               0, font=font, stroke_width=1)
-    #     draw.text((eje_x + 20, eje_y - 30), '60/80',
-    #               0, font=font, stroke_width=1)
-    #     draw.text((eje_x + 15, eje_y + 90), '20"/20"',
-    #               0, font=font, stroke_width=1)
-    #     eje_x += 150
-    #     if eje_x > 820:
-    #         eje_x = 70
-    #         eje_y += 180
     draw_training(img, draw, training, lst_images)
-
-    img.save(f'{fecha}.jpg')
+    img.save(save_path(f'{fecha}.jpg'))
 
 
 def draw_training(img, draw, training, lst_images, eje_x=70, eje_y=200):
     '''Recursive drawing cycle'''
-    font = ImageFont.truetype("./images/Arial Unicode.ttf", 25)
-    bracket_font = ImageFont.truetype("./images/Arial Unicode.ttf", 125)
+    font = ImageFont.truetype(resource_path("./images/Arial Unicode.ttf"), 25)
+    bracket_font = ImageFont.truetype(
+        resource_path("./images/Arial Unicode.ttf"), 125)
     for trng in training:
         if isinstance(trng, Saltos):
             img.paste(lst_images[trng.get_training() - 1], (eje_x, eje_y))
@@ -350,3 +340,24 @@ def run():
             continue
 
         history_lst[current_elem].add_training(tmp_train)
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
+def save_path(relative_path):
+    '''Get absolute path to save file for PyInstaller'''
+    try:
+        sys.frozen
+        base_path = os.path.dirname(sys.executable)
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    print(os.path.join(base_path, relative_path))
+    return os.path.join(base_path, relative_path)
