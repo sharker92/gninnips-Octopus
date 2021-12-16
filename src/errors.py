@@ -1,0 +1,71 @@
+
+'''Errors Module'''
+
+
+class InputDataError(Exception):
+    '''Error in input data'''
+
+
+class NumDataError(InputDataError):
+    '''Error in number of input data'''
+    E_MISSING_DATA = 'El número de datos ingresados es incorrecto.\
+    \nPor favor intentelo de nuevo.'
+
+    def __init__(self, msg=E_MISSING_DATA):
+        # Exception.__init__(self, mensaje)
+        super().__init__(msg)
+
+
+class NoDataError(InputDataError):
+    '''Error when no input data'''
+    E_NO_DATA = 'No se ingresó ningún comando.\
+    \nPor favor intentelo de nuevo.'
+
+    def __init__(self, msg=E_NO_DATA):
+        super().__init__(msg)
+
+
+class CommandError(InputDataError):
+    '''Error when no valid command entered'''
+    E_NO_DATA = 'No se ingresó ningún comando valido.\
+    \nPor favor intentelo de nuevo.'
+
+    def __init__(self, msg=E_NO_DATA):
+        super().__init__(msg)
+
+
+class NoValidTimeError(InputDataError):
+    '''Error when sum of up and down times aren't divisor for total time'''
+    E_TIME_DIV = 'El tiempo total no corresponde a la suma del tiempo sentado y parado.\
+    \nPor favor intentelo de nuevo.'
+
+    def __init__(self, msg=E_TIME_DIV):
+        super().__init__(msg)
+
+
+class DataError(InputDataError):
+    '''Error when data type isn't valid.'''
+    E_DATA_VALUE = "Error en el dato '{val}'. No es un dato valido.\
+\nPor favor intentelo de nuevo."
+
+    def __init__(self, val, msg=E_DATA_VALUE):
+        super().__init__(msg)
+        self.val = val
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg.format(val=self.val)
+
+
+class RangeError(InputDataError):
+    '''Error when values are out of range'''
+    E_RANGE = "Valor fuera del rango valido, ingrese valores entre '{min}' y '{max}'"
+
+    def __init__(self, min, max, msg=E_RANGE):
+        super().__init__(msg)
+        self.min = min
+        self.max = max
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg.format(min=self.min, max=self.max)
