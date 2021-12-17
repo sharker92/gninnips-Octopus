@@ -140,7 +140,7 @@ def generate_image(training, fecha, titulo=''):
     # titulo = 'Día de la carrera larga'
     # print(draw.textlength('Día de la carrera larga', font=font))
     draw.text((175, 0), titulo, 0, font=font_title)
-    draw.text((830, 90), fecha, 0, font=font_tot_time)
+    draw.text((830, 90), fecha.strftime("%d/%m/%Y"), 0, font=font_tot_time)
     draw.text((855, 120), training.get_time(), 0, font=font_tot_time)
     lst_images = list()
     for i in range(1, 10):
@@ -149,7 +149,7 @@ def generate_image(training, fecha, titulo=''):
         tmp_img.thumbnail(size)
         lst_images.append(tmp_img)
     draw_training(img, draw, training, lst_images)
-    img.save(save_path(f'{fecha}.jpg'))
+    img.save(save_path(f'{fecha.strftime("%d-%m-%Y")}.jpg'))
 
 
 def draw_training(img, draw, training, lst_images, eje_x=70, eje_y=200):
@@ -212,7 +212,7 @@ def print_training(training, nest=0):
 def run():
     '''Run main program'''
     titulo = ''
-    fecha = str(date.today())
+    fecha = date.today()
     history_lst = list()
     history_lst.append(CicloDeEntrenamiento())
     current_elem = len(history_lst) - 1
