@@ -1,5 +1,7 @@
 
 '''Errors Module'''
+# pylint: disable=line-too-long, useless-super-delegation
+# flake8: noqa: E501
 
 
 class InputDataError(Exception):
@@ -61,10 +63,10 @@ class RangeError(InputDataError):
     '''Error when values are out of range'''
     E_RANGE = "Valor fuera del rango valido, ingrese valores entre '{min}' y '{max}'"
 
-    def __init__(self, min, max, msg=E_RANGE):
+    def __init__(self, min_val, max_val, msg=E_RANGE):
         super().__init__(msg)
-        self.min = min
-        self.max = max
+        self.min = min_val
+        self.max = max_val
         self.msg = msg
 
     def __str__(self):

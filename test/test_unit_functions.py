@@ -1,6 +1,8 @@
 '''Unit tests for functions'''
-import pytest
+# pylint: disable=line-too-long, import-error
+# flake8: noqa: E501
 from datetime import datetime
+import pytest
 from src.run import check_coherent_time, convert_to_time, split_jump_data, split_data
 from src.errors import NoDataError, NumDataError, DataError
 

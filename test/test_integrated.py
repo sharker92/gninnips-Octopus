@@ -1,8 +1,8 @@
 '''Unit tests'''
-from datetime import datetime, timedelta
+# pylint: disable=line-too-long, import-error
 import pytest
-from src.classes import Entrenamiento, Saltos, CicloDeEntrenamiento
-from src.run import create_trnng_obj, split_jump_data, run
+from src.classes import Entrenamiento, Saltos
+from src.run import create_trnng_obj, split_jump_data
 from src.errors import DataError, NumDataError, NoValidTimeError
 
 

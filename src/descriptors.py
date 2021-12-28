@@ -1,4 +1,6 @@
 '''Descriptor Module'''
+# pylint: disable=line-too-long, import-error
+# flake8: noqa: E501
 from datetime import datetime
 from src.errors import RangeError, DataError
 
@@ -42,10 +44,11 @@ class IsTime():
             value = datetime.strptime(value, '%M:%S')
             if value.minute == 0 and value.second == 0:
                 raise DataError(value.strftime('%M:%S'))
-        except ValueError:
+        except ValueError as error:
             try:
                 value = datetime.strptime(value, '%S')
                 if value.second == 0:
+                    # pylint: disable=raise-missing-from
                     raise DataError(value.strftime('%S'))
             except ValueError as error:
                 raise DataError(value) from error

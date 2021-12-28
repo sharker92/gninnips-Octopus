@@ -1,19 +1,35 @@
 '''Run Module'''
-from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime, timedelta
-from src.classes import Entrenamiento, Saltos, CicloDeEntrenamiento
-from src.errors import DataError, InputDataError, CommandError, NoDataError, NumDataError, NoValidTimeError, RangeError
-from datetime import date
+# pylint: disable=line-too-long, import-error
+# flake8: noqa: E501
 import sys
 import os
-BASE_MESSAGE = '''
-Ingrese el entrenamiento en el siguiente formato:
+from datetime import date
+from datetime import datetime, timedelta
+from PIL import Image, ImageDraw, ImageFont
+from src.classes import Entrenamiento, Saltos, CicloDeEntrenamiento
+from src.errors import DataError, InputDataError, CommandError, NoDataError, NumDataError, NoValidTimeError, RangeError
 
-<#Entrenamiento> <% 100> <Cadencia 000> <Tiempo 00:00>
+
+FORMAT = '''
+Formato de comandos:
+
+Comando:
+<Letra_del_comando >
+
+Entrenamiento:
+<  # Entrenamiento> <% 100> <Cadencia 000> <Tiempo 00:00>
 
 Saltos:
+<  # Entrenamiento> <% 100> <Cadencia 000/000> <Tiempo Total 00:00> <Tiempo Saltos 00/00>'''
 
-<#Entrenamiento> <% 100> <Cadencia 000/000> <Tiempo Total 00:00> <Tiempo Saltos 00/00>
+BASE_QUESTION = '''
+Ingrese el entrenamiento o comando deseado: '''
+
+EDIT_QUESTION = '''
+Ingrese el entrenamiento sustituto: '''
+
+COMMAND_MESSAGE = f'''
+Comandos:
 
 1 -> Terreno Plano Sentado
 2 -> Terreno Plano de Pie
@@ -33,30 +49,24 @@ T -> Cambiar Titulo
 H -> Cambiar Fecha
 G -> Generar imagen
 S -> Salir
-
+{FORMAT}
 '''
 
 EDIT_MESSAGE = '''
 Editando entrenamiento {num}.
-Ingrese el entrenamiento en el siguiente formato:
-
-<#Entrenamiento> <% 100> <Cadencia 000> <Tiempo 00:00>
-
-Saltos:
-
-<#Entrenamiento> <% 100> <Cadencia 000/000> <Tiempo Total 00:00> <Tiempo Saltos 00/00>
+{format}
 '''
 
 
-def convert_to_time(tm):
+def convert_to_time(time):
     '''Convert strings to time'''
     try:
-        return datetime.strptime(tm, '%M:%S')
+        return datetime.strptime(time, '%M:%S')
     except ValueError:
         try:
-            return datetime.strptime(tm, '%S')
-        except ValueError:
-            raise DataError(tm)
+            return datetime.strptime(time, '%S')
+        except ValueError as error:
+            raise DataError(time) from error
 
 
 def check_coherent_time(tm_tot, tm_dwn, tm_up):
@@ -153,6 +163,7 @@ def generate_image(training, fecha, titulo=''):
         lst_images.append(tmp_img)
 
     draw_training(img, draw, training, lst_images)
+    print('Imagen guardada en:')
     img.save(save_path(f'{fecha.strftime("%d-%m-%Y")}.jpg'))
 
 
@@ -176,7 +187,6 @@ def draw_training(img, draw, training, lst_images, eje_x=90, eje_y=150):
                 img, draw, trng, lst_images, eje_x, eje_y)
             end_text = f']x{trng.get_reps()}'
             end_text_lngth = int(draw.textlength(end_text, font=bracket_font))
-            print(end_text_lngth, eje_x)
             if eje_x + end_text_lngth - 160 > img_limit:
                 eje_x = margin_x
                 eje_y += 180
@@ -221,10 +231,10 @@ def center_text(width, text, draw, font):
 
 
 def print_training(training, nest=0):
-    '''print training to the console'''
+    '''Print training to the console'''
     space = ''
     if nest > 0:
-        space = "   " * nest
+        space = '   ' * nest
 
     for num, trng in enumerate(training):
         num += 1
@@ -234,7 +244,7 @@ def print_training(training, nest=0):
             print(f'{num}:')
             print_training(trng, nest + 1)
     print(
-        f'{space}Total time: {training.get_time()}, Repetitions: {training.get_reps()}')
+        f'{space}Tiempo Total: {training.get_time()}, Repeticiones: {training.get_reps()}')
 
 
 def run():
@@ -247,8 +257,12 @@ def run():
     while True:
         for lst in history_lst:
             lst.calc_time()
+        print('#'*40)
+        print('Entrenamiento:\n')
         print_training(history_lst[0])
-        inpt_data = input(BASE_MESSAGE)
+        print(COMMAND_MESSAGE)
+        inpt_data = input(BASE_QUESTION)
+        print()
         try:
             splt_data = split_data(inpt_data)
         except InputDataError as error:
@@ -265,7 +279,6 @@ def run():
             current_elem = len(history_lst) - 1
             continue
         elif splt_data == 'f':
-            print('Saliendo del ciclo.')
             if current_elem == 0:
                 print('No es posible salir del ciclo principal.\nIntente otra opción')
                 continue
@@ -275,28 +288,40 @@ def run():
             except RangeError as error:
                 print(error)
                 continue
+            except DataError as error:
+                print(error)
+                continue
+            print('Saliendo del ciclo.')
             history_lst.pop()
             current_elem = len(history_lst) - 1
             continue
         elif splt_data == 'e':
             if len(history_lst[current_elem]) == 0:
-                print('El ciclo no tiene elementos.\nIntente otra opción')
+                print('El ciclo no tiene elementos.\nIntente otra opción.')
                 continue
             try:
-                sel = int(input('Seleccione un elemento a editar: ')) - 1
+                sel = input('Seleccione un elemento a editar: ')
+                sel = int(sel) - 1
                 if sel < 0 or sel >= len(history_lst[current_elem]):
                     raise RangeError(1, len(history_lst[current_elem]))
             except RangeError as error:
                 print(error)
                 continue
+            except ValueError as error:
+                try:
+                    raise DataError(sel) from error
+                except DataError as error:
+                    print(error)
+                    continue
+
             temp_train = history_lst[current_elem].check_if_cycle(sel)
-            print(temp_train)
             if temp_train:
                 print('Editando ciclo de entrenamiento.')
                 history_lst.append(temp_train)
                 current_elem = len(history_lst) - 1
             else:
-                inpt_data = input(EDIT_MESSAGE.format(num=sel))
+                print(EDIT_MESSAGE.format(num=sel + 1, format=FORMAT))
+                inpt_data = input(EDIT_QUESTION)
                 try:
                     splt_data = split_data(inpt_data)
                 except InputDataError as error:
@@ -323,13 +348,14 @@ def run():
                 continue
             try:
                 sel2 = int(
-                    input('¿Por cual elemento desea intercambiarlo?: ')) - 1
+                    input('¿Por cuál elemento desea intercambiarlo?: ')) - 1
                 if sel2 < 0 or sel2 >= len(history_lst[current_elem]):
                     raise RangeError(1, len(history_lst[current_elem]))
             except RangeError as error:
                 print(error)
                 continue
             history_lst[current_elem].change_training(sel1, sel2)
+            print(f'Elementos {sel1+1} y {sel2+1} intercambiados.')
             continue
         elif splt_data == 'd':
             if not history_lst[current_elem]:
@@ -337,7 +363,7 @@ def run():
                 continue
             try:
                 sel = int(input('Ingrese elemento a eliminar: '))
-                history_lst[current_elem].remove_training(sel)
+                deleted = history_lst[current_elem].remove_training(sel)
             except RangeError as error:
                 print(error)
                 continue
@@ -347,10 +373,11 @@ def run():
                 except DataError as error:
                     print(error)
                     continue
+            print(f'Elemento "{sel}: {deleted}" eliminado.')
             continue
         elif splt_data == 'h':
             fecha = input(
-                'Por favor ingrese la fecha del entrenamiento (01/12/22): ')
+                'Por favor ingrese la fecha del entrenamiento (dd/mm/aa): ')
             try:
                 fecha = datetime.strptime(fecha, '%d/%m/%y')
                 print(f'La nueva fecha es:\n{fecha.strftime("%d/%m/%Y")}')
@@ -374,6 +401,7 @@ def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
+        # pylint: disable=protected-access
         base_path = sys._MEIPASS
     except AttributeError:
         base_path = os.path.abspath(".")
@@ -383,6 +411,8 @@ def resource_path(relative_path):
 def save_path(relative_path):
     '''Get absolute path to save file for PyInstaller'''
     try:
+        # PyInstaller add frozen to sys
+        # pylint: disable=pointless-statement
         sys.frozen
         base_path = os.path.dirname(sys.executable)
     except AttributeError:

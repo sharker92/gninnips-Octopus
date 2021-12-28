@@ -1,5 +1,7 @@
 '''Module clases'''
-from datetime import datetime, time, timedelta
+# pylint: disable=line-too-long, import-error
+# flake8: noqa: E501
+from datetime import datetime, timedelta
 from src.descriptors import MinMaxRange, IsTime
 from src.errors import DataError, RangeError
 
@@ -103,10 +105,10 @@ class Saltos(Entrenamiento):
         # Al imprimir la instancia en el descriptor provoca un error de atributo por aun no estar definidos todos los valores.
         try:
             return f'T: {self.training}, \
-{self.hearth_rate}%, {self.cadence} rpm down, \
+{self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
 {datetime.strftime(self.tot_time, "%-M:%-S")}, \
-{self.cadence_up} rpm up, {datetime.strftime(self.time_dwn, "%-M:%-S")} down, \
-{datetime.strftime(self.time_up, "%-M:%-S")} up'
+{datetime.strftime(self.time_dwn, "%-S")}/\
+{datetime.strftime(self.time_up, "%-S")}'
         except AttributeError:
             return object.__str__(self)
 
@@ -161,10 +163,8 @@ class CicloDeEntrenamiento():
             raise RangeError(1, len(self.training_list))
         pos -= 1
         rmvd_trnng = self.training_list.pop(pos)
-        if isinstance(rmvd_trnng, Entrenamiento):
-            self.calc_time()
-        elif isinstance(rmvd_trnng, CicloDeEntrenamiento):
-            self.calc_time()
+        self.calc_time()
+        return rmvd_trnng
 
     def change_training(self, sel1, sel2):
         '''change of position elements on training_list'''

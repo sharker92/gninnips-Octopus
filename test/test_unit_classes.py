@@ -1,8 +1,10 @@
 '''Unit tests for Classes'''
+# pylint: disable=line-too-long, import-error
+# flake8: noqa: E501
 from datetime import datetime, timedelta
+import pytest
 from src.errors import DataError, RangeError
 from src.classes import Entrenamiento, Saltos, CicloDeEntrenamiento
-import pytest
 
 
 @pytest.mark.parametrize(
