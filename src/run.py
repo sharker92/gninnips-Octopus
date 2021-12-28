@@ -127,69 +127,97 @@ def split_data_simple(data):
 
 def generate_image(training, fecha, titulo=''):
     '''Convert training to jpeg'''
-    img = Image.new('RGB', (1000, 720), (255, 255, 255))
+    img_width = 1270
+    img_length = 820
+    img = Image.new('RGB', (img_width, img_length), (255, 255, 255))
     draw = ImageDraw.Draw(img)
     font_title = ImageFont.truetype(
-        resource_path("./images/Arial Unicode.ttf"), 75)
+        resource_path("./images/HelveticaNeueBold.ttf"), 75)
     font_tot_time = ImageFont.truetype(
-        resource_path("./images/Arial Unicode.ttf"), 30)
+        resource_path("./images/HelveticaNeueBold.ttf"), 30)
     logo = Image.open(resource_path('./images/logo.jpeg'))
     size = (150, 150)
     logo.thumbnail(size)
     img.paste(logo, (0, 0))
-    # titulo = 'Día de la carrera larga'
-    # print(draw.textlength('Día de la carrera larga', font=font))
-    draw.text((175, 0), titulo, 0, font=font_title)
-    draw.text((830, 90), fecha.strftime("%d/%m/%Y"), 0, font=font_tot_time)
-    draw.text((855, 120), training.get_time(), 0, font=font_tot_time)
+    x_title = center_text(img_width, titulo, draw, font_title)
+    draw.text((x_title, 0), titulo, 0, font=font_title)
+    x_date = img_width - 180
+    draw.text((x_date, 0), fecha.strftime("%d/%m/%Y"), 0, font=font_tot_time)
+    x_time = img_width - 155
+    draw.text((x_time, 30), training.get_time(), 0, font=font_tot_time)
     lst_images = list()
     for i in range(1, 10):
         tmp_img = Image.open(resource_path(f'./images/{i}.png'))
         size = (100, 100)
         tmp_img.thumbnail(size)
         lst_images.append(tmp_img)
+
     draw_training(img, draw, training, lst_images)
     img.save(save_path(f'{fecha.strftime("%d-%m-%Y")}.jpg'))
 
 
-def draw_training(img, draw, training, lst_images, eje_x=70, eje_y=200):
+def draw_training(img, draw, training, lst_images, eje_x=90, eje_y=150):
     '''Recursive drawing cycle'''
-    font = ImageFont.truetype(resource_path("./images/Arial Unicode.ttf"), 25)
+    margin_x = eje_x
+    margin_y = 180
+    img_limit = 1170
+    box_size = 100
+    font = ImageFont.truetype(resource_path(
+        "./images/HelveticaNeueBold.ttf"), 25)
     bracket_font = ImageFont.truetype(
-        resource_path("./images/Arial Unicode.ttf"), 125)
+        resource_path("./images/HelveticaNeueRegular.ttf"), 150)
     for trng in training:
-        if isinstance(trng, Saltos):
-            img.paste(lst_images[trng.get_training() - 1], (eje_x, eje_y))
-            draw.text((eje_x - 50, eje_y + 25), f'{trng.get_hearth_rate()}%',
-                      0, font=font, stroke_width=1)
-            draw.text((eje_x + 6, eje_y - 30), trng.get_cadence(),
-                      0, font=font, stroke_width=1)
-            draw.text((eje_x + 10, eje_y + 90), trng.get_time(),
-                      0, font=font, stroke_width=1)
-            draw.text((eje_x + 40, eje_y + 30), trng.get_num_jump(),
-                      0, font=font, stroke_width=1)
+        if isinstance(trng, CicloDeEntrenamiento):
+            eje_x += 10
+            y_cntrd = 45
+            draw.text((eje_x - 75, eje_y - y_cntrd), '[',
+                      font=bracket_font, fill=(255, 0, 0), stroke_width=3)
+            eje_x, eje_y = draw_training(
+                img, draw, trng, lst_images, eje_x, eje_y)
+            end_text = f']x{trng.get_reps()}'
+            end_text_lngth = int(draw.textlength(end_text, font=bracket_font))
+            print(end_text_lngth, eje_x)
+            if eje_x + end_text_lngth - 160 > img_limit:
+                eje_x = margin_x
+                eje_y += 180
+            draw.text((eje_x - 60, eje_y - y_cntrd), end_text,
+                      font=bracket_font, fill=(255, 0, 0), stroke_width=3)
+            eje_x += int(end_text_lngth - 160)
+
         elif isinstance(trng, Entrenamiento):
             img.paste(lst_images[trng.get_training() - 1], (eje_x, eje_y))
             draw.text((eje_x - 50, eje_y + 25), f'{trng.get_hearth_rate()}%',
-                      0, font=font, stroke_width=1)
-            draw.text((eje_x + 30, eje_y - 30), trng.get_cadence(),
-                      0, font=font, stroke_width=1)
-            draw.text((eje_x + 15, eje_y + 90), trng.get_tot_time(),
-                      0, font=font, stroke_width=1)
-        elif isinstance(trng, CicloDeEntrenamiento):
-            eje_x += 10
-            draw.text((eje_x - 75, eje_y - 55), '[',
-                      font=bracket_font, fill=(255, 0, 0))
-            eje_x, eje_y = draw_training(
-                img, draw, trng, lst_images, eje_x, eje_y)
-            draw.text((eje_x - 60, eje_y - 55), f']x{trng.get_reps()}',
-                      font=bracket_font, fill=(255, 0, 0))
-            eje_x += 10
+                      0, font=font)
+            x_cntrd = center_text(
+                box_size, trng.get_cadence(), draw, font)
+            draw.text((eje_x + x_cntrd, eje_y - 30), trng.get_cadence(),
+                      0, font=font)
+            if isinstance(trng, Saltos):
+                x_cntrd = center_text(
+                    box_size, trng.get_time_str(), draw, font)
+                draw.text((eje_x + x_cntrd, eje_y + 90),
+                          trng.get_time_str(),  0, font=font)
+                x_cntrd = center_text(
+                    box_size, trng.get_num_jump(), draw, font)
+                draw.text((eje_x + x_cntrd, eje_y + 30),
+                          trng.get_num_jump(), 0, font=font)
+            else:
+                x_cntrd = center_text(
+                    box_size, trng.get_tot_time_str(), draw, font)
+                draw.text((eje_x + x_cntrd, eje_y + 90),
+                          trng.get_tot_time_str(), 0, font=font)
+
         eje_x += 160
-        if eje_x > 880:
-            eje_x = 70
-            eje_y += 180
+        if eje_x > img_limit:
+            eje_x = margin_x
+            eje_y += margin_y
     return eje_x, eje_y
+
+
+def center_text(width, text, draw, font):
+    '''returns location for center text'''
+    centered_text_location = width/2 - draw.textlength(text, font=font)/2
+    return centered_text_location
 
 
 def print_training(training, nest=0):

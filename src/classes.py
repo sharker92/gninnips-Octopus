@@ -30,9 +30,14 @@ class Entrenamiento():
         '''Get cadence attribute'''
         return str(self.cadence)
 
-    def get_tot_time(self):
-        '''Get tot_time attribute'''
-        return self.tot_time.strftime('%M:%S')
+    def get_tot_time_str(self):
+        '''Get tot_time in string'''
+        if self.tot_time.minute == 0:
+            return self.tot_time.strftime('%-S"')
+        elif self.tot_time.second == 0:
+            return self.tot_time.strftime('%-M\'')
+        else:
+            return self.tot_time.strftime('%-M\'%-S"')
 
     def __eq__(self, other_obj):
         return (self.training == other_obj.training and
@@ -44,14 +49,14 @@ class Entrenamiento():
         # Al imprimir la instancia en el descriptor provoca un error de atributo por aun no estar definidos todos los valores.
         try:
             return f'T: {self.training}, {self.hearth_rate}%, \
-{self.cadence}rpm, {datetime.strftime(self.tot_time, "%M:%S")}'
+{self.cadence}rpm, {datetime.strftime(self.tot_time, "%-M:%-S")}'
         except AttributeError:
             return object.__str__(self)
 
     def __repr__(self):
         try:
             return f'<{self.training}, {self.hearth_rate}, \
-{self.cadence}, {datetime.strftime(self.tot_time, "%M:%S")}>'
+{self.cadence}, {datetime.strftime(self.tot_time, "%-M:%-S")}>'
         except AttributeError:
             return object.__repr__(self)
 
@@ -81,9 +86,9 @@ class Saltos(Entrenamiento):
                                       timedelta(seconds=self.time_up.second))
         return f'{int(num_jumps)}'
 
-    def get_time(self):
-        '''Get time intervals attributes'''
-        return f'{self.time_dwn.strftime("%S")}"/{self.time_up.strftime("%S")}"'
+    def get_time_str(self):
+        '''Return time intervals in string'''
+        return f'{self.time_dwn.strftime("%-S")}"/{self.time_up.strftime("%-S")}"'
 
     def __eq__(self, other_obj):
         return (self.training == other_obj.training and
@@ -99,18 +104,18 @@ class Saltos(Entrenamiento):
         try:
             return f'T: {self.training}, \
 {self.hearth_rate}%, {self.cadence} rpm down, \
-{datetime.strftime(self.tot_time, "%M:%S")}, \
-{self.cadence_up} rpm up, {datetime.strftime(self.time_dwn, "%M:%S")} down, \
-{datetime.strftime(self.time_up, "%M:%S")} up'
+{datetime.strftime(self.tot_time, "%-M:%-S")}, \
+{self.cadence_up} rpm up, {datetime.strftime(self.time_dwn, "%-M:%-S")} down, \
+{datetime.strftime(self.time_up, "%-M:%-S")} up'
         except AttributeError:
             return object.__str__(self)
 
     def __repr__(self):
         try:
             return f'<{self.training}, {self.hearth_rate}, {self.cadence}, \
-{datetime.strftime(self.tot_time, "%M:%S")} total, {self.cadence_up}, \
-{datetime.strftime(self.time_dwn, "%M:%S")}, \
-{datetime.strftime(self.time_up, "%M:%S")}>'
+{datetime.strftime(self.tot_time, "%-M:%-S")} total, {self.cadence_up}, \
+{datetime.strftime(self.time_dwn, "%-M:%-S")}, \
+{datetime.strftime(self.time_up, "%-M:%-S")}>'
         except AttributeError:
             return object.__repr__(self)
 
