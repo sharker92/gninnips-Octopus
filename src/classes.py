@@ -57,8 +57,8 @@ class Entrenamiento():
 
     def __repr__(self):
         try:
-            return f'<{self.training}, {self.hearth_rate}, \
-{self.cadence}, {datetime.strftime(self.tot_time, "%-M:%-S")}>'
+            return f'{self.training} {self.hearth_rate} \
+{self.cadence} {datetime.strftime(self.tot_time, "%-M:%-S")}'
         except AttributeError:
             return object.__repr__(self)
 
@@ -114,10 +114,10 @@ class Saltos(Entrenamiento):
 
     def __repr__(self):
         try:
-            return f'<{self.training}, {self.hearth_rate}, {self.cadence}, \
-{datetime.strftime(self.tot_time, "%-M:%-S")} total, {self.cadence_up}, \
-{datetime.strftime(self.time_dwn, "%-M:%-S")}, \
-{datetime.strftime(self.time_up, "%-M:%-S")}>'
+            return f'{self.training} {self.hearth_rate} {self.cadence}/{self.cadence_up} \
+{datetime.strftime(self.tot_time, "%-M:%-S")}  \
+{datetime.strftime(self.time_dwn, "%-M:%-S")}/\
+{datetime.strftime(self.time_up, "%-M:%-S")}'
         except AttributeError:
             return object.__repr__(self)
 
@@ -148,10 +148,7 @@ class CicloDeEntrenamiento():
 
     def add_training(self, trnng_object):
         '''Add trainings to the list'''
-        if isinstance(trnng_object, Entrenamiento):
-            self.training_list.append(trnng_object)
-            self.calc_time()
-        elif isinstance(trnng_object, CicloDeEntrenamiento):
+        if isinstance(trnng_object, (Entrenamiento, CicloDeEntrenamiento)):
             self.training_list.append(trnng_object)
             self.calc_time()
         else:
@@ -189,7 +186,11 @@ class CicloDeEntrenamiento():
 
     def get_time(self):
         '''returns total time'''
-        return str(self.tot_class_time)
+        time_str = str(self.tot_class_time)
+        if time_str[0] == '0':
+            return time_str[2:]
+        else:
+            return str(self.tot_class_time)
 
     def get_reps(self):
         '''returns repetitions'''
@@ -205,4 +206,27 @@ class CicloDeEntrenamiento():
         return f'{base}Total time: {self.tot_class_time}, Repetitions: {self.repetitions}'
 
     def __repr__(self):
-        return f'{self.training_list}\nTotal time: {self.tot_class_time}, Repetitions: {self.repetitions}'
+        return f'<{self.training_list}\nTotal time: {self.tot_class_time}, Repetitions: {self.repetitions}>'
+
+    def get_cmnd_track(self):
+        '''returns string with the commands to build the training'''
+        trnng_track = list()
+        trnng_track.append(['I'])
+        for trnng in self.training_list:
+            if isinstance(trnng, CicloDeEntrenamiento):
+                trnng_track += trnng.get_cmnd_track()
+            else:
+                trnng_track.append(repr(trnng).split())
+        trnng_track.append(['F', self.repetitions])
+        return trnng_track
+
+    def __add__(self, other):
+        if isinstance(other, CicloDeEntrenamiento):
+            new_training_list = self.training_list + other.training_list
+            new_cycle = CicloDeEntrenamiento()
+            for trnng in new_training_list:
+                new_cycle.add_training(trnng)
+            return new_cycle
+        else:
+
+            return None

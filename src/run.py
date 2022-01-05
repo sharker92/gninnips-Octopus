@@ -3,11 +3,13 @@
 # flake8: noqa: E501
 import sys
 import os
+import csv
 from datetime import date
 from datetime import datetime, timedelta
+from contextlib import suppress
 from PIL import Image, ImageDraw, ImageFont
 from src.classes import Entrenamiento, Saltos, CicloDeEntrenamiento
-from src.errors import DataError, InputDataError, CommandError, NoDataError, NumDataError, NoValidTimeError, RangeError
+from src.errors import DataError, InputDataError, CommandError, NoDataError, NumDataError, NoValidTimeError, RangeError, ExitPrincipalCycle
 
 
 FORMAT = '''
@@ -28,6 +30,10 @@ Ingrese el entrenamiento o comando deseado: '''
 EDIT_QUESTION = '''
 Ingrese el entrenamiento sustituto: '''
 
+FILE_NOT_FOUND_MESSAGE = '''
+Archivo no encontrado.
+Por favor revise el nombre del archivo e intentelo de nuevo.'''
+
 COMMAND_MESSAGE = f'''
 Comandos:
 
@@ -45,9 +51,11 @@ F -> Finalizar Ciclo
 E -> Editar Entrenamiento
 C -> Cambiar orden
 D -> Eliminar entrenamiento
+A -> Eliminar todo el entrenamiento
 T -> Cambiar Titulo
 H -> Cambiar Fecha
-G -> Generar imagen
+G -> Generar imagen y archivo
+R -> Leer archivo
 S -> Salir
 {FORMAT}
 '''
@@ -56,6 +64,29 @@ EDIT_MESSAGE = '''
 Editando entrenamiento {num}.
 {format}
 '''
+
+TITLE_TRAINING_MSG = f'''
+{'#'*40}
+Entrenamiento:
+'''
+
+LOADED_TRAINING_MSG = '''
+Entrenamiento leido exitosamente:
+'''
+
+FILE_DATE_ERROR_MSG = '''
+Fecha no ingresada en el formato correcto.\n\
+Se definira la fecha de hoy "{fecha}".
+'''
+
+NEW_TITLE_MSG = '''
+El nuevo titulo es:\n{titulo}'''
+
+NEW_DATE_MSG = '''La fecha del entrenamiento es:\n{fecha}'''
+
+NO_REPS_DEFINED_ERROR_MSG = '''
+No se definio el número de repeticiones del ciclo.
+De manera predeterminada se definio una repetición.'''
 
 
 def convert_to_time(time):
@@ -119,7 +150,7 @@ def split_data(data):
 
     if len(splt_data) == 1 and comm.isalpha() and len(comm) == 1:
         comm = comm.lower()
-        if comm in ['s', 'i', 'f', 'e', 'c', 'd', 't', 'h', 'g']:
+        if comm in ['s', 'i', 'f', 'e', 'c', 'd', 't', 'h', 'g', 'r', 'a']:
             return comm
         raise CommandError
     if len(splt_data) in (4, 5):
@@ -128,11 +159,89 @@ def split_data(data):
 
 
 def split_data_simple(data):
-    '''splits data by space and return data for training'''
+    '''Splits data by space and return data for training'''
     splt_data = data.split()
     if len(splt_data) in (4, 5):
         return splt_data
     raise NumDataError
+
+
+def generate_csv_file(training, fecha, titulo=''):
+    '''Generate CSV file'''
+    fecha = fecha.strftime("%d-%m-%Y")
+    print('Archivo guardado en:')
+    with open(save_path(f'{fecha}.csv'), 'w', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        headers = ['Comando', '% 100', 'Cadencia 000/000',
+                   'Tiempo Total 00:00', 'Tiempo Saltos 00/00']
+        writer.writerows([['T', titulo], ['H', fecha], headers])
+        trnng_track = training.get_cmnd_track()
+        trnng_track.remove(['I'])
+        trnng_track = trnng_track[::-1]
+        trnng_track.remove(['F', 1])
+        trnng_track = trnng_track[::-1]
+        writer.writerows(trnng_track)
+
+
+def read_csv_file():
+    '''Reads csv file and converts into training'''
+    file_name = input('Ingrese el nombre del archivo a leer: ') + '.csv'
+    print('Leyendo archivo en: ')
+    file_path = save_path(file_name)
+    titulo = ''
+    fecha = date.today()
+    history_lst = list()
+    with open(file_path, 'r', encoding='utf-8') as file:
+        csv_reader = csv.reader(file)
+        history_lst.append(CicloDeEntrenamiento())
+        current_elem = len(history_lst) - 1
+        for line in csv_reader:
+            for lst in history_lst:
+                lst.calc_time()
+            line = list(filter(lambda x: x != "", line))
+            try:
+                command = line[0].upper()
+            except TypeError:
+                command = line[0]
+            if command == 'I':
+                new_train_cicle = CicloDeEntrenamiento()
+                history_lst.append(new_train_cicle)
+                history_lst[current_elem].add_training(new_train_cicle)
+                current_elem = len(history_lst) - 1
+                continue
+            elif command == 'F':
+                if current_elem == 0:
+                    raise ExitPrincipalCycle
+                try:
+                    history_lst[current_elem].reps(line[1])
+                except IndexError:
+                    print(NO_REPS_DEFINED_ERROR_MSG)
+                    history_lst[current_elem].reps(1)
+                history_lst.pop()
+                current_elem = len(history_lst) - 1
+                continue
+            elif command.isdecimal():
+                tmp_train = create_trnng_obj(line)
+                history_lst[current_elem].add_training(tmp_train)
+                continue
+            elif command == 'H':
+                try:
+                    fecha = line[1]
+                    fecha = datetime.strptime(fecha, '%d/%m/%y')
+                    print(NEW_DATE_MSG.format(fecha=fecha.strftime("%d/%m/%Y")))
+                except (IndexError, ValueError):
+                    fecha = date.today()
+                    print(FILE_DATE_ERROR_MSG.format(
+                        fecha=fecha.strftime("%d/%m/%Y")))
+                continue
+            elif command == 'T':
+                with suppress(IndexError):
+                    titulo = line[1]
+                    print(NEW_TITLE_MSG.format(titulo=titulo))
+                continue
+    print(LOADED_TRAINING_MSG)
+    print_training(history_lst[current_elem])
+    return titulo, fecha, history_lst[0]
 
 
 def generate_image(training, fecha, titulo=''):
@@ -152,9 +261,13 @@ def generate_image(training, fecha, titulo=''):
     x_title = center_text(img_width, titulo, draw, font_title)
     draw.text((x_title, 0), titulo, 0, font=font_title)
     x_date = img_width - 180
-    draw.text((x_date, 0), fecha.strftime("%d/%m/%Y"), 0, font=font_tot_time)
-    x_time = img_width - 155
-    draw.text((x_time, 30), training.get_time(), 0, font=font_tot_time)
+    file_date = fecha.strftime("%d/%m/%Y")
+    draw.text((x_date, 0), file_date, 0, font=font_tot_time)
+    date_len = draw.textlength(file_date, font=font_tot_time)
+    training_time = training.get_time()
+    x_time = center_text(date_len, training_time,
+                         draw, font_tot_time) + x_date
+    draw.text((x_time, 30), training_time, 0, font=font_tot_time)
     lst_images = list()
     for i in range(1, 10):
         tmp_img = Image.open(resource_path(f'./images/{i}.png'))
@@ -236,12 +349,12 @@ def print_training(training, nest=0):
     if nest > 0:
         space = '   ' * nest
 
-    for num, trng in enumerate(training):
-        num += 1
+    for num, trng in enumerate(training, start=1):
+        #num += 1
         if isinstance(trng, Entrenamiento):
             print(f'{space}{num}: {trng}')
         elif isinstance(trng, CicloDeEntrenamiento):
-            print(f'{num}:')
+            print(f'{space}{num}:')
             print_training(trng, nest + 1)
     print(
         f'{space}Tiempo Total: {training.get_time()}, Repeticiones: {training.get_reps()}')
@@ -257,8 +370,7 @@ def run():
     while True:
         for lst in history_lst:
             lst.calc_time()
-        print('#'*40)
-        print('Entrenamiento:\n')
+        print(TITLE_TRAINING_MSG)
         print_training(history_lst[0])
         print(COMMAND_MESSAGE)
         inpt_data = input(BASE_QUESTION)
@@ -337,7 +449,7 @@ def run():
             continue
         elif splt_data == 't':
             titulo = input('Por favor ingrese el titulo del entrenamiento: ')
-            print(f'El nuevo titulo es:\n{titulo}')
+            print(NEW_TITLE_MSG.format(titulo=titulo))
         elif splt_data == 'c':
             try:
                 sel1 = int(input('Ingrese elemento a cambiar de lugar: ')) - 1
@@ -376,18 +488,46 @@ def run():
             print(f'Elemento "{sel}: {deleted}" eliminado.')
             continue
         elif splt_data == 'h':
-            fecha = input(
+            fecha_temp = input(
                 'Por favor ingrese la fecha del entrenamiento (dd/mm/aa): ')
             try:
-                fecha = datetime.strptime(fecha, '%d/%m/%y')
-                print(f'La nueva fecha es:\n{fecha.strftime("%d/%m/%Y")}')
+                fecha = datetime.strptime(fecha_temp, '%d/%m/%y')
+                print(NEW_DATE_MSG.format(fecha=fecha.strftime("%d/%m/%Y")))
             except ValueError:
                 print(
                     f'Fecha ingresada no valida {fecha}.\nPor favor intentelo de nuevo.')
             continue
         elif splt_data == 'g':
             generate_image(history_lst[0], fecha, titulo)
+            generate_csv_file(history_lst[0], fecha, titulo)
             continue
+        elif splt_data == 'r':
+            try:
+                titulo, fecha, recovered_trnng = read_csv_file()
+            except FileNotFoundError:
+                print(FILE_NOT_FOUND_MESSAGE)
+            except InputDataError as error:
+                print(error)
+            except ExitPrincipalCycle as error:
+                print(error)
+            else:
+                history_lst[0] += recovered_trnng
+            continue
+        elif splt_data == 'a':
+            verify = input(
+                '¿Esta seguro que desea eliminar todo el entrenamiento? (Y/n): ')
+            if verify == 'Y':
+                print('Eliminando todo el entrenamiento.\n')
+                history_lst = list()
+                history_lst.append(CicloDeEntrenamiento())
+                current_elem = len(history_lst) - 1
+                print('Entrenamiento eliminado exitosamente.\n')
+            elif verify == 'n':
+                print('Eliminación de entrenamiento cancelada.')
+            else:
+                print('Comando no reconocido.\nPor favor intentelo de nuevo.')
+            continue
+
         try:
             tmp_train = create_trnng_obj(splt_data)
         except InputDataError as error:

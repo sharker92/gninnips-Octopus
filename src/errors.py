@@ -71,3 +71,16 @@ class RangeError(InputDataError):
 
     def __str__(self):
         return self.msg.format(min=self.min, max=self.max)
+
+
+class FileError(Exception):
+    '''Error when problems with file reading/writing.'''
+
+
+class ExitPrincipalCycle(FileError):
+    '''Error trying to exit principal cycle'''
+    E_LAST_CYCLE = 'No es posible salir del ciclo principal.\
+    \nPor favor revise el formato de su archivo e intentelo de nuevo.'
+
+    def __init__(self, msg=E_LAST_CYCLE):
+        super().__init__(msg)
