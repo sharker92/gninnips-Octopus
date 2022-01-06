@@ -79,10 +79,16 @@ Fecha no ingresada en el formato correcto.\n\
 Se definira la fecha de hoy "{fecha}".
 '''
 
+FILE_DATE_MISSING_ERROR_MSG = '''
+Fecha no ingresada.\n\
+Se definira la fecha de hoy "{fecha}".
+'''
+
 NEW_TITLE_MSG = '''
 El nuevo titulo es:\n{titulo}'''
 
-NEW_DATE_MSG = '''La fecha del entrenamiento es:\n{fecha}'''
+NEW_DATE_MSG = '''
+La fecha del entrenamiento es:\n{fecha}'''
 
 NO_REPS_DEFINED_ERROR_MSG = '''
 No se definio el número de repeticiones del ciclo.
@@ -229,12 +235,24 @@ def read_csv_file():
             elif command == 'H':
                 try:
                     fecha = line[1]
-                    fecha = datetime.strptime(fecha, '%d/%m/%y')
-                    print(NEW_DATE_MSG.format(fecha=fecha.strftime("%d/%m/%Y")))
-                except (IndexError, ValueError):
+                except IndexError:
                     fecha = date.today()
-                    print(FILE_DATE_ERROR_MSG.format(
+                    print(FILE_DATE_MISSING_ERROR_MSG.format(
                         fecha=fecha.strftime("%d/%m/%Y")))
+                    continue
+                try:
+                    fecha = datetime.strptime(fecha, '%d/%m/%Y')
+                except ValueError:
+                    try:
+                        fecha = datetime.strptime(fecha, '%d-%m-%Y')
+                    except ValueError:
+                        fecha = date.today()
+                        print(FILE_DATE_ERROR_MSG.format(
+                            fecha=fecha.strftime("%d/%m/%Y")))
+                        continue
+                finally:
+                    print(NEW_DATE_MSG.format(fecha=fecha.strftime("%d/%m/%Y")))
+
                 continue
             elif command == 'T':
                 with suppress(IndexError):
@@ -284,7 +302,7 @@ def generate_image(training, fecha, titulo=''):
 
 def draw_training(img, draw, training, lst_images, eje_x=90, eje_y=150):
     '''Recursive drawing cycle'''
-    margin_x = eje_x
+    margin_x = 90
     margin_y = 180
     img_limit = 1170
     box_size = 100
@@ -491,9 +509,9 @@ def run():
             continue
         elif splt_data == 'h':
             fecha_temp = input(
-                'Por favor ingrese la fecha del entrenamiento (dd/mm/aa): ')
+                'Por favor ingrese la fecha del entrenamiento (dd/mm/aaaa): ')
             try:
-                fecha = datetime.strptime(fecha_temp, '%d/%m/%y')
+                fecha = datetime.strptime(fecha_temp, '%d/%m/%Y')
                 print(NEW_DATE_MSG.format(fecha=fecha.strftime("%d/%m/%Y")))
             except ValueError:
                 print(
