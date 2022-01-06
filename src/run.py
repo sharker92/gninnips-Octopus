@@ -203,6 +203,8 @@ def read_csv_file():
                 command = line[0].upper()
             except TypeError:
                 command = line[0]
+            except IndexError:
+                continue
             if command == 'I':
                 new_train_cicle = CicloDeEntrenamiento()
                 history_lst.append(new_train_cicle)
