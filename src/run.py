@@ -84,6 +84,10 @@ Fecha no ingresada.\n\
 Se definira la fecha de hoy "{fecha}".
 '''
 
+DATE_FORMAT_INVALID_MSG = '''
+No se ingreso una fecha en el formato indicado (dd/mm/aaaa).
+Por favor intentelo de nuevo.'''
+
 NEW_TITLE_MSG = '''
 El nuevo titulo es:\n{titulo}'''
 
@@ -174,13 +178,14 @@ def split_data_simple(data):
 
 def generate_csv_file(training, fecha, titulo=''):
     '''Generate CSV file'''
-    fecha = fecha.strftime("%d-%m-%Y")
+    file_date = fecha.strftime("%d-%m-%Y")
+    fecha_csv = fecha.strftime("%d/%m/%Y")
     print('Archivo guardado en:')
-    with open(save_path(f'{fecha}.csv'), 'w', encoding='utf-8') as file:
+    with open(save_path(f'{file_date}.csv'), 'w', encoding='utf-8') as file:
         writer = csv.writer(file)
         headers = ['Comando', '% 100', 'Cadencia 000/000',
                    'Tiempo Total 00:00', 'Tiempo Saltos 00/00']
-        writer.writerows([['T', titulo], ['H', fecha], headers])
+        writer.writerows([['T', titulo], ['H', fecha_csv], headers])
         trnng_track = training.get_cmnd_track()
         trnng_track.remove(['I'])
         trnng_track = trnng_track[::-1]
@@ -233,26 +238,16 @@ def read_csv_file():
                 history_lst[current_elem].add_training(tmp_train)
                 continue
             elif command == 'H':
+                print(fecha)
                 try:
                     fecha = line[1]
                 except IndexError:
                     fecha = date.today()
                     print(FILE_DATE_MISSING_ERROR_MSG.format(
                         fecha=fecha.strftime("%d/%m/%Y")))
-                    continue
-                try:
+                else:
                     fecha = datetime.strptime(fecha, '%d/%m/%Y')
-                except ValueError:
-                    try:
-                        fecha = datetime.strptime(fecha, '%d-%m-%Y')
-                    except ValueError:
-                        fecha = date.today()
-                        print(FILE_DATE_ERROR_MSG.format(
-                            fecha=fecha.strftime("%d/%m/%Y")))
-                        continue
-                finally:
                     print(NEW_DATE_MSG.format(fecha=fecha.strftime("%d/%m/%Y")))
-
                 continue
             elif command == 'T':
                 with suppress(IndexError):
@@ -514,8 +509,7 @@ def run():
                 fecha = datetime.strptime(fecha_temp, '%d/%m/%Y')
                 print(NEW_DATE_MSG.format(fecha=fecha.strftime("%d/%m/%Y")))
             except ValueError:
-                print(
-                    f'Fecha ingresada no valida {fecha}.\nPor favor intentelo de nuevo.')
+                print(DATE_FORMAT_INVALID_MSG)
             continue
         elif splt_data == 'g':
             generate_image(history_lst[0], fecha, titulo)
