@@ -35,11 +35,20 @@ class Entrenamiento():
     def get_tot_time_str(self):
         '''Get tot_time in string'''
         if self.tot_time.minute == 0:
-            return self.tot_time.strftime('%-S"')
+            try:
+                return self.tot_time.strftime('%-S"')
+            except ValueError:
+                return self.tot_time.strftime('%#S"')
         elif self.tot_time.second == 0:
-            return self.tot_time.strftime('%-M\'')
+            try:
+                return self.tot_time.strftime('%-M\'')
+            except ValueError:
+                return self.tot_time.strftime('%#M\'')
         else:
-            return self.tot_time.strftime('%-M\'%-S"')
+            try:
+                return self.tot_time.strftime('%-M\'%-S"')
+            except ValueError:
+                return self.tot_time.strftime('%#M\'%#S"')
 
     def __eq__(self, other_obj):
         return (self.training == other_obj.training and
@@ -54,6 +63,9 @@ class Entrenamiento():
 {self.cadence}rpm, {datetime.strftime(self.tot_time, "%-M:%-S")}'
         except AttributeError:
             return object.__str__(self)
+        except ValueError:
+            return f'T: {self.training}, {self.hearth_rate}%, \
+{self.cadence}rpm, {datetime.strftime(self.tot_time, "%#M:%#S")}'
 
     def __repr__(self):
         try:
@@ -61,6 +73,9 @@ class Entrenamiento():
 {self.cadence} {datetime.strftime(self.tot_time, "%-M:%-S")}'
         except AttributeError:
             return object.__repr__(self)
+        except ValueError:
+            return f'{self.training} {self.hearth_rate} \
+{self.cadence} {datetime.strftime(self.tot_time, "%#M:%#S")}'
 
 
 class Saltos(Entrenamiento):
@@ -90,7 +105,10 @@ class Saltos(Entrenamiento):
 
     def get_time_str(self):
         '''Return time intervals in string'''
-        return f'{self.time_dwn.strftime("%-S")}"/{self.time_up.strftime("%-S")}"'
+        try:
+            return f'{self.time_dwn.strftime("%-S")}"/{self.time_up.strftime("%-S")}"'
+        except ValueError:
+            return f'{self.time_dwn.strftime("%#S")}"/{self.time_up.strftime("%#S")}"'
 
     def __eq__(self, other_obj):
         return (self.training == other_obj.training and
@@ -111,6 +129,12 @@ class Saltos(Entrenamiento):
 {datetime.strftime(self.time_up, "%-S")}'
         except AttributeError:
             return object.__str__(self)
+        except ValueError:
+            return f'T: {self.training}, \
+{self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
+{datetime.strftime(self.tot_time, "%#M:%#S")}, \
+{datetime.strftime(self.time_dwn, "%#S")}/\
+{datetime.strftime(self.time_up, "%#S")}'
 
     def __repr__(self):
         try:
@@ -120,6 +144,11 @@ class Saltos(Entrenamiento):
 {datetime.strftime(self.time_up, "%-M:%-S")}'
         except AttributeError:
             return object.__repr__(self)
+        except ValueError:
+            return f'{self.training} {self.hearth_rate} {self.cadence}/{self.cadence_up} \
+{datetime.strftime(self.tot_time, "%#M:%#S")}  \
+{datetime.strftime(self.time_dwn, "%#M:%#S")}/\
+{datetime.strftime(self.time_up, "%#M:%#S")}'
 
 
 class CicloDeEntrenamiento():
