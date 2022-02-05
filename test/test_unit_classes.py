@@ -91,9 +91,9 @@ def test_saltos(test_input, ex_trn, ex_hrth, ex_cad, ex_tot_tm, ex_cad_up, ex_tm
      ('5',  '50', '60',  '0:0', '121', '0:0', '0:0'),
      ]
 )
-def test_saltos_range_fail(trn, hrth, cad, tot_tm, cad_up, tm_dwn, tm_up):
+def test_saltos_zero_tmp_downup_fail(trn, hrth, cad, tot_tm, cad_up, tm_dwn, tm_up):
     '''Test Saltos Class Failures'''
-    with pytest.raises(RangeError):
+    with pytest.raises(DataError):
         Saltos(trn, hrth, cad, tot_tm, cad_up, tm_dwn, tm_up)
 
 
