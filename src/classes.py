@@ -192,6 +192,14 @@ class CicloDeEntrenamiento():
         self.calc_time()
         return rmvd_trnng
 
+    def insert_training(self, trnng_object, pos=-1):
+        '''Insert training in the position indicated'''
+        if isinstance(trnng_object, (Entrenamiento, CicloDeEntrenamiento)):
+            self.training_list.insert(pos, trnng_object)
+            self.calc_time()
+        else:
+            raise DataError(trnng_object)
+
     def change_training(self, sel1, sel2):
         '''change of position elements on training_list'''
         self.training_list[sel1], self.training_list[sel2] = self.training_list[sel2], self.training_list[sel1]

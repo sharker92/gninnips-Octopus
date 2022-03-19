@@ -50,6 +50,7 @@ I -> Iniciar Ciclo
 F -> Finalizar Ciclo
 E -> Editar Entrenamiento
 C -> Cambiar orden
+W -> Inertar Elemento en posición X
 D -> Eliminar entrenamiento
 A -> Eliminar todo el entrenamiento
 T -> Cambiar Titulo
@@ -62,6 +63,11 @@ S -> Salir
 
 EDIT_MESSAGE = '''
 Editando entrenamiento {num}.
+{format}
+'''
+
+INSERT_MESSAGE = '''
+INSERTANDO entrenamiento {num}.
 {format}
 '''
 
@@ -160,7 +166,7 @@ def split_data(data):
 
     if len(splt_data) == 1 and comm.isalpha() and len(comm) == 1:
         comm = comm.lower()
-        if comm in ['s', 'i', 'f', 'e', 'c', 'd', 't', 'h', 'g', 'r', 'a']:
+        if comm in ['s', 'i', 'f', 'e', 'c', 'w', 'd', 't', 'h', 'g', 'r', 'a']:
             return comm
         raise CommandError
     if len(splt_data) in (4, 5):
@@ -261,32 +267,32 @@ def read_csv_file():
 
 def generate_image(training, fecha, titulo=''):
     '''Convert training to jpeg'''
-    img_width = 1270
-    img_length = 820
+    img_width = 3840
+    img_length = 2160
     img = Image.new('RGB', (img_width, img_length), (255, 255, 255))
     draw = ImageDraw.Draw(img)
     font_title = ImageFont.truetype(
-        resource_path("./images/HelveticaNeueBold.ttf"), 75)
+        resource_path("./images/HelveticaNeueBold.ttf"), 225)
     font_tot_time = ImageFont.truetype(
-        resource_path("./images/HelveticaNeueBold.ttf"), 30)
+        resource_path("./images/HelveticaNeueBold.ttf"), 90)
     logo = Image.open(resource_path('./images/logo.jpeg'))
-    size = (150, 150)
+    size = (400, 400)
     logo.thumbnail(size)
     img.paste(logo, (0, 0))
     x_title = center_text(img_width, titulo, draw, font_title)
     draw.text((x_title, 0), titulo, 0, font=font_title)
-    x_date = img_width - 180
+    x_date = img_width - 540
     file_date = fecha.strftime("%d/%m/%Y")
     draw.text((x_date, 0), file_date, 0, font=font_tot_time)
     date_len = draw.textlength(file_date, font=font_tot_time)
     training_time = training.get_time()
     x_time = center_text(date_len, training_time,
                          draw, font_tot_time) + x_date
-    draw.text((x_time, 30), training_time, 0, font=font_tot_time)
+    draw.text((x_time, 90), training_time, 0, font=font_tot_time)
     lst_images = list()
     for i in range(1, 10):
         tmp_img = Image.open(resource_path(f'./images/{i}.png'))
-        size = (100, 100)
+        size = (270, 270)
         tmp_img.thumbnail(size)
         lst_images.append(tmp_img)
 
@@ -295,57 +301,57 @@ def generate_image(training, fecha, titulo=''):
     img.save(save_path(f'{fecha.strftime("%d-%m-%Y")}.jpg'))
 
 
-def draw_training(img, draw, training, lst_images, eje_x=90, eje_y=150):
+def draw_training(img, draw, training, lst_images, eje_x=270, eje_y=380):
     '''Recursive drawing cycle'''
-    margin_x = 90
-    margin_y = 180
-    img_limit = 1170
-    box_size = 100
+    margin_x = 270
+    margin_y = 460
+    img_limit = 3540
+    box_size = 300
     font = ImageFont.truetype(resource_path(
-        "./images/HelveticaNeueBold.ttf"), 25)
+        "./images/HelveticaNeueBold.ttf"), 75)
     bracket_font = ImageFont.truetype(
-        resource_path("./images/HelveticaNeueRegular.ttf"), 150)
+        resource_path("./images/HelveticaNeueRegular.ttf"), 450)
     for trng in training:
         if isinstance(trng, CicloDeEntrenamiento):
-            eje_x += 10
-            y_cntrd = 45
-            draw.text((eje_x - 75, eje_y - y_cntrd), '[',
+            eje_x += 30
+            y_cntrd = 135
+            draw.text((eje_x - 225, eje_y - y_cntrd), '[',
                       font=bracket_font, fill=(255, 0, 0), stroke_width=3)
             eje_x, eje_y = draw_training(
                 img, draw, trng, lst_images, eje_x, eje_y)
             end_text = f']x{trng.get_reps()}'
             end_text_lngth = int(draw.textlength(end_text, font=bracket_font))
-            if eje_x + end_text_lngth - 160 > img_limit:
+            if eje_x + end_text_lngth - 500 > img_limit:
                 eje_x = margin_x
-                eje_y += 180
+                eje_y += 460
             draw.text((eje_x - 60, eje_y - y_cntrd), end_text,
                       font=bracket_font, fill=(255, 0, 0), stroke_width=3)
-            eje_x += int(end_text_lngth - 160)
+            eje_x += int(end_text_lngth - 400)
 
         elif isinstance(trng, Entrenamiento):
             img.paste(lst_images[trng.get_training() - 1], (eje_x, eje_y))
-            draw.text((eje_x - 50, eje_y + 25), f'{trng.get_hearth_rate()}%',
+            draw.text((eje_x - 160, eje_y + 75), f'{trng.get_hearth_rate()}%',
                       0, font=font)
             x_cntrd = center_text(
                 box_size, trng.get_cadence(), draw, font)
-            draw.text((eje_x + x_cntrd, eje_y - 30), trng.get_cadence(),
+            draw.text((eje_x + x_cntrd, eje_y - 90), trng.get_cadence(),
                       0, font=font)
             if isinstance(trng, Saltos):
                 x_cntrd = center_text(
                     box_size, trng.get_time_str(), draw, font)
-                draw.text((eje_x + x_cntrd, eje_y + 90),
+                draw.text((eje_x + x_cntrd, eje_y + 290),
                           trng.get_time_str(),  0, font=font)
                 x_cntrd = center_text(
                     box_size, trng.get_num_jump(), draw, font)
-                draw.text((eje_x + x_cntrd, eje_y + 30),
+                draw.text((eje_x + x_cntrd, eje_y + 90),
                           trng.get_num_jump(), 0, font=font)
             else:
                 x_cntrd = center_text(
                     box_size, trng.get_tot_time_str(), draw, font)
-                draw.text((eje_x + x_cntrd, eje_y + 90),
+                draw.text((eje_x + x_cntrd, eje_y + 290),
                           trng.get_tot_time_str(), 0, font=font)
 
-        eje_x += 160
+        eje_x += 500
         if eje_x > img_limit:
             eje_x = margin_x
             eje_y += margin_y
@@ -365,7 +371,6 @@ def print_training(training, nest=0):
         space = '   ' * nest
 
     for num, trng in enumerate(training, start=1):
-        #num += 1
         if isinstance(trng, Entrenamiento):
             print(f'{space}{num}: {trng}')
         elif isinstance(trng, CicloDeEntrenamiento):
@@ -462,6 +467,41 @@ def run():
                 history_lst[current_elem].edit_training(tmp_train, sel)
 
             continue
+        elif splt_data == 'w':
+            if len(history_lst[current_elem]) == 0:
+                print('El ciclo no tiene elementos.\nIntente otra opción.')
+                continue
+            try:
+                sel = input('Ingrese posición en la que desea insertar el entrenamiento: ')
+                sel = int(sel) - 1
+                if sel < 0 or sel >= len(history_lst[current_elem]):
+                    raise RangeError(1, len(history_lst[current_elem]))
+            except RangeError as error:
+                print(error)
+                continue
+            except ValueError as error:
+                try:
+                    raise DataError(sel) from error
+                except DataError as error:
+                    print(error)
+                    continue
+
+            print(INSERT_MESSAGE.format(num=sel + 1, format=FORMAT))
+            inpt_data = input(EDIT_QUESTION)
+            try:
+                splt_data = split_data(inpt_data)
+            except InputDataError as error:
+                print(error)
+                continue
+            try:
+                tmp_train = create_trnng_obj(splt_data)
+            except InputDataError as error:
+                print(error)
+                continue
+            history_lst[current_elem].insert_training(tmp_train, sel)
+            print(f'Elemento "{tmp_train}" agregado en la posición "{sel + 1}".')
+            continue
+
         elif splt_data == 't':
             titulo = input('Por favor ingrese el titulo del entrenamiento: ')
             print(NEW_TITLE_MSG.format(titulo=titulo))
