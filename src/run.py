@@ -276,7 +276,7 @@ def generate_image(training, fecha, titulo=''):
     font_tot_time = ImageFont.truetype(
         resource_path("./images/HelveticaNeueBold.ttf"), 90)
     logo = Image.open(resource_path('./images/logo.jpeg'))
-    size = (400, 400)
+    size = (350, 350)
     logo.thumbnail(size)
     img.paste(logo, (0, 0))
     x_title = center_text(img_width, titulo, draw, font_title)
@@ -301,9 +301,9 @@ def generate_image(training, fecha, titulo=''):
     img.save(save_path(f'{fecha.strftime("%d-%m-%Y")}.jpg'))
 
 
-def draw_training(img, draw, training, lst_images, eje_x=270, eje_y=380):
+def draw_training(img, draw, training, lst_images, eje_x=200, eje_y=380):
     '''Recursive drawing cycle'''
-    margin_x = 270
+    margin_x = 200
     margin_y = 460
     img_limit = 3540
     box_size = 300
