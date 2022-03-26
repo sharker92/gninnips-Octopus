@@ -9,7 +9,7 @@ from src.errors import DataError, RangeError
 class Entrenamiento():
     '''Class Entrenamiento'''
 
-    training = MinMaxRange(1, 9)
+    training = MinMaxRange(1, 10)
     hearth_rate = MinMaxRange(50, 90)
     cadence = MinMaxRange(60, 120)
     tot_time = IsTime()
@@ -59,23 +59,29 @@ class Entrenamiento():
     def __str__(self):
         # Al imprimir la instancia en el descriptor provoca un error de atributo por aun no estar definidos todos los valores.
         try:
-            return f'T: {self.training}, {self.hearth_rate}%, \
-{self.cadence}rpm, {datetime.strftime(self.tot_time, "%-M:%-S")}'
+            if self.training == 10:
+                return f'T: {self.training}, :D'
+            else:
+                return f'T: {self.training}, {self.hearth_rate}%, \
+                    {self.cadence}rpm, {datetime.strftime(self.tot_time, "%-M:%-S")}'
         except AttributeError:
             return object.__str__(self)
         except ValueError:
             return f'T: {self.training}, {self.hearth_rate}%, \
-{self.cadence}rpm, {datetime.strftime(self.tot_time, "%#M:%#S")}'
+                {self.cadence}rpm, {datetime.strftime(self.tot_time, "%#M:%#S")}'
 
     def __repr__(self):
         try:
-            return f'{self.training} {self.hearth_rate} \
-{self.cadence} {datetime.strftime(self.tot_time, "%-M:%-S")}'
+            if self.training == 10:
+                return f'T: {self.training}, :D'
+            else:
+                return f'{self.training} {self.hearth_rate} \
+                    {self.cadence} {datetime.strftime(self.tot_time, "%-M:%-S")}'
         except AttributeError:
-            return object.__repr__(self)
+                return object.__repr__(self)
         except ValueError:
             return f'{self.training} {self.hearth_rate} \
-{self.cadence} {datetime.strftime(self.tot_time, "%#M:%#S")}'
+                {self.cadence} {datetime.strftime(self.tot_time, "%#M:%#S")}'
 
 
 class Saltos(Entrenamiento):

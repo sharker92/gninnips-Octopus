@@ -14,8 +14,6 @@ from src.templates import COMMAND_MESSAGE, BASE_QUESTION, EDIT_QUESTION, FILE_NO
                             NEW_TITLE_MSG, NEW_DATE_MSG, FORMAT
 
 
-
-
 def run():
     '''Run main program'''
     titulo = ''

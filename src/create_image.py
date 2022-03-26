@@ -31,7 +31,7 @@ def generate_image(training, fecha, titulo=''):
                          draw, font_tot_time) + x_date
     draw.text((x_time, 90), training_time, 0, font=font_tot_time)
     lst_images = list()
-    for i in range(1, 10):
+    for i in range(1, 11):
         tmp_img = Image.open(resource_path(f'./images/{i}.png'))
         size = (270, 270)
         tmp_img.thumbnail(size)
@@ -71,26 +71,27 @@ def draw_training(img, draw, training, lst_images, eje_x=200, eje_y=380):
 
         elif isinstance(trng, Entrenamiento):
             img.paste(lst_images[trng.get_training() - 1], (eje_x, eje_y))
-            draw.text((eje_x - 160, eje_y + 75), f'{trng.get_hearth_rate()}%',
-                      0, font=font)
-            x_cntrd = center_text(
-                box_size, trng.get_cadence(), draw, font)
-            draw.text((eje_x + x_cntrd, eje_y - 90), trng.get_cadence(),
-                      0, font=font)
-            if isinstance(trng, Saltos):
+            if not trng.get_training() == 10:
+                draw.text((eje_x - 160, eje_y + 75), f'{trng.get_hearth_rate()}%',
+                        0, font=font)
                 x_cntrd = center_text(
-                    box_size, trng.get_time_str(), draw, font)
-                draw.text((eje_x + x_cntrd, eje_y + 290),
-                          trng.get_time_str(),  0, font=font)
-                x_cntrd = center_text(
-                    box_size, trng.get_num_jump(), draw, font)
-                draw.text((eje_x + x_cntrd, eje_y + 90),
-                          trng.get_num_jump(), 0, font=font)
-            else:
-                x_cntrd = center_text(
-                    box_size, trng.get_tot_time_str(), draw, font)
-                draw.text((eje_x + x_cntrd, eje_y + 290),
-                          trng.get_tot_time_str(), 0, font=font)
+                    box_size, trng.get_cadence(), draw, font)
+                draw.text((eje_x + x_cntrd, eje_y - 90), trng.get_cadence(),
+                        0, font=font)
+                if isinstance(trng, Saltos):
+                    x_cntrd = center_text(
+                        box_size, trng.get_time_str(), draw, font)
+                    draw.text((eje_x + x_cntrd, eje_y + 290),
+                            trng.get_time_str(),  0, font=font)
+                    x_cntrd = center_text(
+                        box_size, trng.get_num_jump(), draw, font)
+                    draw.text((eje_x + x_cntrd, eje_y + 90),
+                            trng.get_num_jump(), 0, font=font)
+                else:
+                    x_cntrd = center_text(
+                        box_size, trng.get_tot_time_str(), draw, font)
+                    draw.text((eje_x + x_cntrd, eje_y + 290),
+                            trng.get_tot_time_str(), 0, font=font)
 
         eje_x += 500
         if eje_x > img_limit:

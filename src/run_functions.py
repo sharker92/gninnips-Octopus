@@ -65,6 +65,11 @@ def create_trnng_obj(data):
             raise NumDataError from error
         except ArithmeticError as error:
             raise NoValidTimeError from error
+    elif data[0] == ('10'):
+        try:
+            tmp_train = Entrenamiento(*data)
+        except TypeError as error:
+            raise NumDataError from error
     else:
         try:
             tmp_train = Entrenamiento(*data)
@@ -86,7 +91,11 @@ def split_data(data):
         if comm in ['s', 'i', 'f', 'e', 'c', 'w', 'd', 't', 'h', 'g', 'r', 'a']:
             return comm
         raise CommandError
-    if len(splt_data) in (4, 5):
+    elif len(splt_data) == 1 and comm.isdigit() and len(comm) == 2:
+        if comm == '10':
+            return ['10', '50', '60', '1']
+        raise CommandError
+    elif len(splt_data) in (4, 5):
         return splt_data
     raise NumDataError
 
