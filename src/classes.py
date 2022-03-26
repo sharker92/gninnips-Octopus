@@ -72,10 +72,7 @@ class Entrenamiento():
 
     def __repr__(self):
         try:
-            if self.training == 10:
-                return f'T: {self.training}, :D'
-            else:
-                return f'{self.training} {self.hearth_rate} \
+            return f'{self.training} {self.hearth_rate} \
                     {self.cadence} {datetime.strftime(self.tot_time, "%-M:%-S")}'
         except AttributeError:
                 return object.__repr__(self)

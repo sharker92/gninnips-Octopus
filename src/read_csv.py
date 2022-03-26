@@ -48,7 +48,6 @@ def read_csv_file():
         history_lst.append(CicloDeEntrenamiento())
         current_elem = len(history_lst) - 1
         for line in csv_reader:
-            print(line, 'haaaaa')
             for lst in history_lst:
                 lst.calc_time()
             line = list(filter(lambda x: x != "", line))
