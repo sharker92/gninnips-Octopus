@@ -1,7 +1,8 @@
 /*.jpg
 /*.jpeg
 /*.png
-.vscode
+.vscode/settings.json
+.tool-versions
 .DS_Store
 *.pptx
 *.lock

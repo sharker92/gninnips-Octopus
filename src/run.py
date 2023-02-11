@@ -99,7 +99,6 @@ def run():
                     print(error)
                     continue
                 history_lst[current_elem].edit_training(tmp_train, sel)
-
             continue
         elif splt_data == 'w':
             if len(history_lst[current_elem]) == 0:
@@ -215,7 +214,6 @@ def run():
             else:
                 print('Comando no reconocido.\nPor favor intentelo de nuevo.')
             continue
-
         try:
             tmp_train = create_trnng_obj(splt_data)
         except InputDataError as error:
