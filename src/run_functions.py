@@ -58,7 +58,7 @@ def split_jump_data(data):
 
 def create_trnng_obj(data):
     '''Creates the indicated training object'''
-    if data[0] in ('5', '7'):
+    if data[0] in ('5', '7', '12'):
         try:
             tmp_train = Saltos(*split_jump_data(data))
         except ValueError as error:

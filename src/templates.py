@@ -27,6 +27,8 @@ Comandos:
 8 -> Sprint Sentado
 9 -> Sprint en Colina
 10 -> Carita :)
+11 -> Carita :) con datos
+12 -> Carita :) con saltos
 I -> Iniciar Ciclo
 F -> Finalizar Ciclo
 E -> Editar Entrenamiento

@@ -31,7 +31,7 @@ def generate_image(training, fecha, titulo=''):
                          draw, font_tot_time) + x_date
     draw.text((x_time, 90), training_time, 0, font=font_tot_time)
     lst_images = list()
-    for i in range(1, 11):
+    for i in range(1, 13):
         tmp_img = Image.open(resource_path(f'./images/{i}.png'))
         size = (270, 270)
         tmp_img.thumbnail(size)
