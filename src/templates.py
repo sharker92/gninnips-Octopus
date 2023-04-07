@@ -12,7 +12,11 @@ Entrenamiento:
 <  # Entrenamiento> <% 100> <Cadencia 000> <Tiempo 00:00>
 
 Saltos:
-<  # Entrenamiento> <% 100> <Cadencia 000/000> <Tiempo Total 00:00> <Tiempo Saltos 00/00>'''
+<  # Entrenamiento> <% 100> <Cadencia 000/000> <Tiempo Total 00:00> <Tiempo Saltos 00/00>
+
+Caritas:
+<  11 <Tiempo 00:00>
+<  12 <% 100> <Tiempo 00:00>'''
 
 COMMAND_MESSAGE = f'''
 Comandos:
@@ -27,8 +31,9 @@ Comandos:
 8 -> Sprint Sentado
 9 -> Sprint en Colina
 10 -> Carita :)
-11 -> Carita :) con datos
-12 -> Carita :) con saltos
+11 -> Carita :) con tiempo
+12 -> Carita :) con tiempo y %
+13 -> Carita :) con tiempo, % y cadencia
 I -> Iniciar Ciclo
 F -> Finalizar Ciclo
 E -> Editar Entrenamiento
@@ -97,3 +102,8 @@ La fecha del entrenamiento es:\n{fecha}'''
 NO_REPS_DEFINED_ERROR_MSG = '''
 No se definio el número de repeticiones del ciclo.
 De manera predeterminada se definio una repetición.'''
+
+MILES_OR_TIME = '''
+M -> MILLAS
+T -> TIEMPO
+SELECCIONE LA LETRA QUE INDIQUE LA UNIDAD CORRECTA: '''

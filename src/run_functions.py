@@ -19,29 +19,30 @@ def print_training(training, nest=0):
         elif isinstance(trng, CicloDeEntrenamiento):
             print(f'{space}{num}:')
             print_training(trng, nest + 1)
-    print(
-        f'{space}Tiempo Total: {training.get_time()}, Repeticiones: {training.get_reps()}')
+    print(f'{space}Tiempo Total: {training.get_time()}')
+    print(f'{space}Distancia Total: {training.get_distance()}')
+    print(f'Repeticiones: {training.get_reps()}')
 
-def convert_to_time(time):
-    '''Convert strings to time'''
-    try:
-        return datetime.strptime(time, '%M:%S')
-    except ValueError:
-        try:
-            return datetime.strptime(time, '%S')
-        except ValueError as error:
-            raise DataError(time) from error
+# def convert_to_time(time):
+#     '''Convert strings to time'''
+#     try:
+#         return datetime.strptime(time, '%M:%S')
+#     except ValueError:
+#         try:
+#             return datetime.strptime(time, '%S')
+#         except ValueError as error:
+#             raise DataError(time) from error
 
 
-def check_coherent_time(tm_tot, tm_dwn, tm_up):
-    '''Check if total time is divisible between time down plus time up'''
-    tm_tot = convert_to_time(tm_tot)
-    tm_dwn = convert_to_time(tm_dwn)
-    tm_up = convert_to_time(tm_up)
-    dlt_tot = timedelta(minutes=tm_tot.minute, seconds=tm_tot.second)
-    dlt_dwn = timedelta(minutes=tm_dwn.minute, seconds=tm_dwn.second)
-    dlt_up = timedelta(minutes=tm_up.minute, seconds=tm_up.second)
-    return not (dlt_tot / (dlt_dwn + dlt_up)).is_integer()
+# def check_coherent_time(tm_tot, tm_dwn, tm_up):
+#     '''Check if total time is divisible between time down plus time up'''
+#     tm_tot = convert_to_time(tm_tot)
+#     tm_dwn = convert_to_time(tm_dwn)
+#     tm_up = convert_to_time(tm_up)
+#     dlt_tot = timedelta(minutes=tm_tot.minute, seconds=tm_tot.second)
+#     dlt_dwn = timedelta(minutes=tm_dwn.minute, seconds=tm_dwn.second)
+#     dlt_up = timedelta(minutes=tm_up.minute, seconds=tm_up.second)
+#     return not (dlt_tot / (dlt_dwn + dlt_up)).is_integer()
 
 
 def split_jump_data(data):
@@ -51,25 +52,18 @@ def split_jump_data(data):
     tmp_cad_dwn, tmp_cad_up = data[2].split('/')
     tmp_tot_tme = data[3]
     tmp_tme_dwn, tmp_tme_up = data[4].split('/')
-    if check_coherent_time(tmp_tot_tme, tmp_tme_dwn, tmp_tme_up):
-        raise ArithmeticError
     return tmp_trnng, tmp_hrth_rate, tmp_cad_dwn, tmp_tot_tme, tmp_cad_up, tmp_tme_dwn, tmp_tme_up
 
 
 def create_trnng_obj(data):
     '''Creates the indicated training object'''
-    if data[0] in ('5', '7', '12'):
+    if data[0] in ('5', '7'):
         try:
             tmp_train = Saltos(*split_jump_data(data))
         except ValueError as error:
             raise NumDataError from error
         except ArithmeticError as error:
             raise NoValidTimeError from error
-    elif data[0] == ('10'):
-        try:
-            tmp_train = Entrenamiento(*data)
-        except TypeError as error:
-            raise NumDataError from error
     else:
         try:
             tmp_train = Entrenamiento(*data)
@@ -93,9 +87,17 @@ def split_data(data):
         raise CommandError
     elif len(splt_data) == 1 and comm.isdigit() and len(comm) == 2:
         if comm == '10':
-            return ['10', '50', '60', '1']
+            return [comm, '50', '60', '60']
         raise CommandError
-    elif len(splt_data) in (4, 5):
+    elif len(splt_data) == 2 and comm.isdigit() and len(comm) == 2:
+        if comm == '11':
+            return [comm, '50', '60', splt_data[1]]
+        raise CommandError
+    elif len(splt_data) == 3 and comm.isdigit() and len(comm) == 2:
+        if comm == '12':
+            return [comm, splt_data[1], '60', splt_data[2]]
+        raise CommandError
+    elif len(splt_data) in (4, 5, 6):
         return splt_data
     raise NumDataError
 

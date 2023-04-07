@@ -12,10 +12,11 @@ def generate_image(training, fecha, titulo=''):
     img_length = 2160
     img = Image.new('RGB', (img_width, img_length), (255, 255, 255))
     draw = ImageDraw.Draw(img)
+    font_path = "./images/HelveticaNeueBold.ttf"
     font_title = ImageFont.truetype(
-        resource_path("./images/HelveticaNeueBold.ttf"), 225)
+        resource_path(font_path), 225)
     font_tot_time = ImageFont.truetype(
-        resource_path("./images/HelveticaNeueBold.ttf"), 90)
+        resource_path(font_path), 90)
     logo = Image.open(resource_path('./images/logo.jpeg'))
     size = (350, 350)
     logo.thumbnail(size)
@@ -30,8 +31,13 @@ def generate_image(training, fecha, titulo=''):
     x_time = center_text(date_len, training_time,
                          draw, font_tot_time) + x_date
     draw.text((x_time, 90), training_time, 0, font=font_tot_time)
+    training_distance = f'{training.get_distance()} M'
+    x_distance = center_text(date_len, training_distance,
+                         draw, font_tot_time) + x_date
+    draw.text((x_distance, 180), training_distance, 0, font=font_tot_time)
+
     lst_images = list()
-    for i in range(1, 13):
+    for i in range(1, 14):
         tmp_img = Image.open(resource_path(f'./images/{i}.png'))
         size = (270, 270)
         tmp_img.thumbnail(size)
@@ -55,44 +61,15 @@ def draw_training(img, draw, training, lst_images, eje_x=200, eje_y=380):
     for trng in training:
         if isinstance(trng, CicloDeEntrenamiento):
             eje_x += 30
-            y_cntrd = 135
-            draw.text((eje_x - 225, eje_y - y_cntrd), '[',
-                      font=bracket_font, fill=(255, 0, 0), stroke_width=3)
-            eje_x, eje_y = draw_training(
-                img, draw, trng, lst_images, eje_x, eje_y)
-            end_text = f']x{trng.get_reps()}'
-            end_text_lngth = int(draw.textlength(end_text, font=bracket_font))
-            if eje_x + end_text_lngth - 500 > img_limit:
-                eje_x = margin_x
-                eje_y += 460
-            draw.text((eje_x - 60, eje_y - y_cntrd), end_text,
-                      font=bracket_font, fill=(255, 0, 0), stroke_width=3)
-            eje_x += int(end_text_lngth - 400)
-
+            eje_x, eje_y = draw_brackets(trng, img, lst_images, img_limit, margin_x, eje_x, eje_y, draw, bracket_font)
         elif isinstance(trng, Entrenamiento):
             img.paste(lst_images[trng.get_training() - 1], (eje_x, eje_y))
-            if not trng.get_training() == 10:
-                draw.text((eje_x - 160, eje_y + 75), f'{trng.get_hearth_rate()}%',
-                        0, font=font)
-                x_cntrd = center_text(
-                    box_size, trng.get_cadence(), draw, font)
-                draw.text((eje_x + x_cntrd, eje_y - 90), trng.get_cadence(),
-                        0, font=font)
-                if isinstance(trng, Saltos):
-                    x_cntrd = center_text(
-                        box_size, trng.get_time_str(), draw, font)
-                    draw.text((eje_x + x_cntrd, eje_y + 290),
-                            trng.get_time_str(),  0, font=font)
-                    x_cntrd = center_text(
-                        box_size, trng.get_num_jump(), draw, font)
-                    draw.text((eje_x + x_cntrd, eje_y + 90),
-                            trng.get_num_jump(), 0, font=font)
-                else:
-                    x_cntrd = center_text(
-                        box_size, trng.get_tot_time_str(), draw, font)
-                    draw.text((eje_x + x_cntrd, eje_y + 290),
-                            trng.get_tot_time_str(), 0, font=font)
-
+            draw_hearth_rate_info(trng, eje_x, eje_y, draw, font)
+            draw_cadence_info(trng, box_size, eje_x, eje_y, draw, font)
+            if isinstance(trng, Saltos):
+                draw_jumps_info(trng, box_size, eje_x, eje_y, draw, font)
+            else:
+                draw_training_time(trng, box_size, eje_x, eje_y, draw, font)
         eje_x += 500
         if eje_x > img_limit:
             eje_x = margin_x
@@ -104,3 +81,42 @@ def center_text(width, text, draw, font):
     '''returns location for center text'''
     centered_text_location = width/2 - draw.textlength(text, font=font)/2
     return centered_text_location
+
+def draw_hearth_rate_info(trng, eje_x, eje_y, draw, font):
+    '''draw hearth rate data into image'''
+    if trng.get_training() not in [10, 11]:
+        draw.text((eje_x - 160, eje_y + 75), f'{trng.get_hearth_rate()}%', 0, font=font)
+
+def draw_cadence_info(trng, box_size, eje_x, eje_y, draw, font):
+    '''draw cadence data into image'''
+    if trng.get_training() not in [10, 11, 12]:
+        x_cntrd = center_text(box_size, trng.get_cadence_str(), draw, font)
+        draw.text((eje_x + x_cntrd, eje_y - 90), trng.get_cadence_str(), 0, font=font)
+
+def draw_training_time(trng, box_size, eje_x, eje_y, draw, font):
+    '''draw time data into image'''
+    if trng.get_training() not in [10]:
+        x_cntrd = center_text(box_size, trng.get_time_or_distance_str(), draw, font)
+        draw.text((eje_x + x_cntrd, eje_y + 290), trng.get_time_or_distance_str(), 0, font=font)
+
+def draw_jumps_info(trng, box_size, eje_x, eje_y, draw, font):
+    '''draw jumps data into image'''
+    x_cntrd = center_text(box_size, trng.get_jump_time_or_dst_str(), draw, font)
+    draw.text((eje_x + x_cntrd, eje_y + 290), trng.get_jump_time_or_dst_str(),  0, font=font)
+    x_cntrd = center_text(box_size, trng.get_num_jump(), draw, font)
+    draw.text((eje_x + x_cntrd, eje_y + 90), trng.get_num_jump(), 0, font=font)
+
+def draw_brackets(trng, img, lst_images, img_limit, margin_x, eje_x, eje_y, draw, bracket_font):
+    '''draw brackets in image'''
+    y_cntrd = 135
+    draw.text((eje_x - 225, eje_y - y_cntrd), '[', font=bracket_font, fill=(255, 0, 0), stroke_width=3)
+    eje_x, eje_y = draw_training(img, draw, trng, lst_images, eje_x, eje_y)
+    end_text = f']x{trng.get_reps()}'
+    end_text_lngth = int(draw.textlength(end_text, font=bracket_font))
+    if eje_x + end_text_lngth - 500 > img_limit:
+        eje_x = margin_x
+        eje_y += 460
+    draw.text((eje_x - 60, eje_y - y_cntrd), end_text, font=bracket_font, fill=(255, 0, 0), stroke_width=3)
+    eje_x += int(end_text_lngth - 400)
+    return (eje_x, eje_y)
+    

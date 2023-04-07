@@ -40,17 +40,20 @@ class IsTime():
         self.__field_name = name
 
     def __set__(self, instance, value) -> None:
-        try:
-            value = datetime.strptime(value, '%M:%S')
-            if value.minute == 0 and value.second == 0:
-                raise DataError(value.strftime('%M:%S'))
-        except ValueError as error:
+        if instance.is_miles:
+            value = datetime.strptime('0', '%S')
+        else:
             try:
-                value = datetime.strptime(value, '%S')
-                if value.second == 0:
-                    # pylint: disable=raise-missing-from
-                    raise DataError(value.strftime('%S'))
-            except ValueError as error:
-                raise DataError(value) from error
+                value = datetime.strptime(value, '%M:%S')
+                if value.minute == 0 and value.second == 0:
+                    raise DataError(value.strftime('%M:%S'))
+            except ValueError:
+                try:
+                    value = datetime.strptime(value, '%S')
+                    if value.second == 0:
+                        # pylint: disable=raise-missing-from
+                        raise DataError(value.strftime('%S'))
+                except ValueError as error:
+                    raise DataError(value) from error
 
         instance.__dict__[self.__field_name] = value

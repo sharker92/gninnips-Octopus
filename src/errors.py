@@ -38,7 +38,7 @@ class CommandError(InputDataError):
 
 class NoValidTimeError(InputDataError):
     '''Error when sum of up and down times aren't divisor for total time'''
-    E_TIME_DIV = 'El tiempo total no corresponde a la suma del tiempo sentado y parado.\
+    E_TIME_DIV = 'El tiempo/distancia total no corresponde a la suma del tiempo/distancia sentado y parado.\
     \nPor favor intentelo de nuevo.'
 
     def __init__(self, msg=E_TIME_DIV):

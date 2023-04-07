@@ -16,7 +16,7 @@ from src.templates import LOADED_TRAINING_MSG, NO_REPS_DEFINED_ERROR_MSG, FILE_D
 
 
 
-
+# no tiene soporte de distancia
 def generate_csv_file(training, fecha, titulo=''):
     '''Generate CSV file'''
     file_date = fecha.strftime("%d-%m-%Y")
@@ -49,7 +49,7 @@ def read_csv_file():
         current_elem = len(history_lst) - 1
         for line in csv_reader:
             for lst in history_lst:
-                lst.calc_time()
+                lst.calc_time_and_distance()
             line = list(filter(lambda x: x != "", line))
             try:
                 command = line[0].upper()

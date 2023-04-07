@@ -23,7 +23,7 @@ def run():
     current_elem = len(history_lst) - 1
     while True:
         for lst in history_lst:
-            lst.calc_time()
+            lst.calc_time_and_distance()
         print(TITLE_TRAINING_MSG)
         print_training(history_lst[0])
         print(COMMAND_MESSAGE)
@@ -76,8 +76,8 @@ def run():
             except ValueError as error:
                 try:
                     raise DataError(sel) from error
-                except DataError as error:
-                    print(error)
+                except DataError as error_2:
+                    print(error_2)
                     continue
 
             temp_train = history_lst[current_elem].check_if_cycle(sel)
@@ -115,8 +115,8 @@ def run():
             except ValueError as error:
                 try:
                     raise DataError(sel) from error
-                except DataError as error:
-                    print(error)
+                except DataError as error_2:
+                    print(error_2)
                     continue
 
             print(INSERT_MESSAGE.format(num=sel + 1, format=FORMAT))
@@ -170,8 +170,8 @@ def run():
             except ValueError as error:
                 try:
                     raise DataError(sel) from error
-                except DataError as error:
-                    print(error)
+                except DataError as error_2:
+                    print(error_2)
                     continue
             print(f'Elemento "{sel}: {deleted}" eliminado.')
             continue
