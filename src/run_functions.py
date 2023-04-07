@@ -2,9 +2,8 @@
 # pylint: disable=line-too-long, import-error
 # flake8: noqa: E501
 
-from datetime import datetime, timedelta
 from src.classes import Entrenamiento, Saltos, CicloDeEntrenamiento
-from src.errors import DataError, CommandError, NoDataError, NumDataError, NoValidTimeError
+from src.errors import CommandError, NoDataError, NumDataError, NoValidTimeError
 
 
 def print_training(training, nest=0):
@@ -22,28 +21,6 @@ def print_training(training, nest=0):
     print(f'{space}Tiempo Total: {training.get_time()}')
     print(f'{space}Distancia Total: {training.get_distance()}')
     print(f'Repeticiones: {training.get_reps()}')
-
-# def convert_to_time(time):
-#     '''Convert strings to time'''
-#     try:
-#         return datetime.strptime(time, '%M:%S')
-#     except ValueError:
-#         try:
-#             return datetime.strptime(time, '%S')
-#         except ValueError as error:
-#             raise DataError(time) from error
-
-
-# def check_coherent_time(tm_tot, tm_dwn, tm_up):
-#     '''Check if total time is divisible between time down plus time up'''
-#     tm_tot = convert_to_time(tm_tot)
-#     tm_dwn = convert_to_time(tm_dwn)
-#     tm_up = convert_to_time(tm_up)
-#     dlt_tot = timedelta(minutes=tm_tot.minute, seconds=tm_tot.second)
-#     dlt_dwn = timedelta(minutes=tm_dwn.minute, seconds=tm_dwn.second)
-#     dlt_up = timedelta(minutes=tm_up.minute, seconds=tm_up.second)
-#     return not (dlt_tot / (dlt_dwn + dlt_up)).is_integer()
-
 
 def split_jump_data(data):
     '''Splits Saltos Data preparing it for Saltos Class'''
