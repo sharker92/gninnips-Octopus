@@ -9,14 +9,14 @@ Comando:
 <Letra_del_comando >
 
 Entrenamiento:
-<  # Entrenamiento> <% 100> <Cadencia 000> <Tiempo 00:00>
+<  # Entrenamiento> <% 100> <Cadencia 000> <Tiempo 00:00 | Distancia>
 
 Saltos:
-<  # Entrenamiento> <% 100> <Cadencia 000/000> <Tiempo Total 00:00> <Tiempo Saltos 00/00>
+<  # Entrenamiento> <% 100> <Cadencia 000/000> <Tiempo | Distancia Total 00:00> <Tiempo | Distancia Saltos 00/00>
 
 Caritas:
-<  11 <Tiempo 00:00>
-<  12 <% 100> <Tiempo 00:00>'''
+<  11 <Tiempo 00:00 | Distancia>
+<  12 <% 100> <Tiempo 00:00 | Distancia>'''
 
 COMMAND_MESSAGE = f'''
 Comandos:
@@ -31,9 +31,9 @@ Comandos:
 8 -> Sprint Sentado
 9 -> Sprint en Colina
 10 -> Carita :)
-11 -> Carita :) con tiempo
-12 -> Carita :) con tiempo y %
-13 -> Carita :) con tiempo, % y cadencia
+11 -> Carita :) con tiempo | distancia
+12 -> Carita :) con tiempo | distancia y HR%
+13 -> Carita :) con tiempo | distancia, HR% y cadencia
 I -> Iniciar Ciclo
 F -> Finalizar Ciclo
 E -> Editar Entrenamiento

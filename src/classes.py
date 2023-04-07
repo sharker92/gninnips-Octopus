@@ -108,7 +108,6 @@ class Entrenamiento():
             happy_face_str = ', :D'
             hr_str = f', {self.hearth_rate}%'
             cadence_str = f', {self.cadence}rpm'
-            # dst_or_time_str = ''
             if self.is_miles:
                 dst_or_time_str = f', {self.tot_distance}'
             else:
