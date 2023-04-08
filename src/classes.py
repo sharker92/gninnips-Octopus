@@ -140,7 +140,7 @@ class Entrenamiento():
     def create_str(obj, training_str,  happy_face_str, hr_str, cadence_str, os_date_format, date_joiner = ''):
         '''Create str with specific OS date format'''
         if obj.is_dist:
-            dst_or_time_str = f' {obj.tot_distance}'
+            dst_or_time_str = f'{date_joiner} {obj.tot_distance}'
         else:
             dst_or_time_str = f'{date_joiner} {datetime.strftime(obj.tot_time, os_date_format)}'
         result = obj.join_str(obj.training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str)
