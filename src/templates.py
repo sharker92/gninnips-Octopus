@@ -103,7 +103,10 @@ NO_REPS_DEFINED_ERROR_MSG = '''
 No se definio el número de repeticiones del ciclo.
 De manera predeterminada se definio una repetición.'''
 
-MILES_OR_TIME = '''
-M -> MILLAS
+DIST_OR_TIME = '''
+D -> DISTANCIA (MILLAS || KM)
 T -> TIEMPO
 SELECCIONE LA LETRA QUE INDIQUE LA UNIDAD CORRECTA: '''
+
+READING_LINE = '''
+LEYENDO LINEA -> {line}'''

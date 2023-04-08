@@ -4,7 +4,7 @@
 from datetime import datetime, timedelta
 from src.descriptors import MinMaxRange, IsTime
 from src.errors import CommandError, DataError, RangeError
-from src.templates import MILES_OR_TIME
+from src.templates import DIST_OR_TIME
 # 7 90 100/110 10:0 30/1:30 revisar, no agarra los minutos
 
 class Entrenamiento():
@@ -15,42 +15,45 @@ class Entrenamiento():
     cadence = MinMaxRange(60, 120)
     tot_time = IsTime()
     tot_distance = MinMaxRange(0,9999)
-    is_miles = False
+    is_dist = False
 
-    def __init__(self, training, hearth_rate, cadence, tot_time_or_miles):
+    def __init__(self, training, hearth_rate, cadence, tot_time_or_dist, default_time_or_dist = None):
         self.training = training
         self.hearth_rate = hearth_rate
         self.cadence = cadence
-        self.select_miles_or_time(tot_time_or_miles)
+        self.select_dist_or_time(tot_time_or_dist, default_time_or_dist)
 
-    def select_miles_or_time(self, tot_time_or_miles):
-        '''Define if miles or time'''
+    def select_dist_or_time(self, tot_time_or_dist, default_time_or_dist):
+        '''Define if dist or time'''
         try:
-            if ':' in tot_time_or_miles:
-                self.save_time(tot_time_or_miles)
-            elif int(tot_time_or_miles) >= 60:
-                self.save_dst(tot_time_or_miles)
+            if ':' in tot_time_or_dist:
+                self.save_time(tot_time_or_dist)
+            elif int(tot_time_or_dist) >= 60:
+                self.save_dst(tot_time_or_dist)
             else:
-                miles_or_time = input(MILES_OR_TIME).lower()
+                if default_time_or_dist is None:
+                    dist_or_time = input(DIST_OR_TIME).lower()
+                else:
+                    dist_or_time = default_time_or_dist
                 print()
-                if miles_or_time == 'm':
-                    self.save_dst(tot_time_or_miles)
-                elif miles_or_time == 't':
-                    self.save_time(tot_time_or_miles)
+                if dist_or_time == 'd':
+                    self.save_dst(tot_time_or_dist)
+                elif dist_or_time == 't':
+                    self.save_time(tot_time_or_dist)
                 else:
                     raise CommandError
         except (TypeError, ValueError) as error:
-            raise DataError(tot_time_or_miles) from error
+            raise DataError(tot_time_or_dist) from error
 
-    def save_dst(self, tot_time_or_miles):
-        '''save miles in object'''
-        self.tot_distance = tot_time_or_miles
-        self.is_miles = True
+    def save_dst(self, tot_time_or_dist):
+        '''save dist in object'''
+        self.tot_distance = tot_time_or_dist
+        self.is_dist = True
         self.tot_time = '0'
 
-    def save_time(self, tot_time_or_miles):
+    def save_time(self, tot_time_or_dist):
         '''save time in object'''
-        self.tot_time = tot_time_or_miles
+        self.tot_time = tot_time_or_dist
         self.tot_distance = 0
 
     def get_training(self):
@@ -66,7 +69,7 @@ class Entrenamiento():
         return str(self.cadence)
 
     def get_distance_str(self):
-        '''Get miles attribute'''
+        '''Get dist attribute'''
         return f'{self.tot_distance} M'
 
     def get_tot_time_str(self):
@@ -89,7 +92,7 @@ class Entrenamiento():
 
     def get_time_or_distance_str(self):
         '''Select which unit to return'''
-        if self.is_miles:
+        if self.is_dist:
             return self.get_distance_str()
         else:
             return self.get_tot_time_str()
@@ -108,42 +111,61 @@ class Entrenamiento():
             happy_face_str = ', :D'
             hr_str = f', {self.hearth_rate}%'
             cadence_str = f', {self.cadence}rpm'
-            if self.is_miles:
-                dst_or_time_str = f', {self.tot_distance}'
-            else:
-                dst_or_time_str = f', {datetime.strftime(self.tot_time, "%-M:%-S")}'
-            return create_str_mac(self.training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str)
+            mac_date_str_format = "%-M:%-S"
+            return self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, mac_date_str_format)
         except AttributeError:
             return object.__str__(self)
         except ValueError:
-            if self.is_miles:
-                dst_or_time_str = f', {self.tot_distance}'
-            else:
-                dst_or_time_str = f', {datetime.strftime(self.tot_time, "%#M:%#S")}'
-            return create_str_mac(self.training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str)
+            windows_date_str_format = "%#M:%#S"
+            return self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, windows_date_str_format)
 
     def __repr__(self):
         try:
-            return f'{self.training} {self.hearth_rate} \
-{self.cadence} {datetime.strftime(self.tot_time, "%-M:%-S")} {self.tot_distance}'
+            training_str = str(self.training)
+            happy_face_str = ' -'
+            hr_str = f' {self.hearth_rate}'
+            cadence_str = f' {self.cadence}'
+            mac_date_str_format = "%-M:%-S"
+            result =  self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, mac_date_str_format)
+            return self.add_date_time_csv_unit(self.is_dist, result)
         except AttributeError:
             return object.__repr__(self)
         except ValueError:
-            # Windows Printing
-            return f'{self.training} {self.hearth_rate} \
-{self.cadence} {datetime.strftime(self.tot_time, "%#M:%#S")} {self.tot_distance}'
+            windows_date_str_format = "%#M:%#S"
+            result = self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, windows_date_str_format)
+            return self.add_date_time_csv_unit(self.is_dist, result)
 
-def create_str_mac(training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str):
-    '''Create string depending on trainings'''
-    if training == 10:
-        training_str += happy_face_str
-    elif training == 11:
-        training_str += happy_face_str + happy_face_str + dst_or_time_str
-    elif training == 12:
-        training_str += hr_str + happy_face_str + dst_or_time_str
-    else:
-        training_str += hr_str + cadence_str + dst_or_time_str
-    return training_str
+    @staticmethod
+    def create_str(obj, training_str,  happy_face_str, hr_str, cadence_str, os_date_format):
+        '''Create str with specific OS date format'''
+        if obj.is_dist:
+            dst_or_time_str = f' {obj.tot_distance}'
+        else:
+            dst_or_time_str = f' {datetime.strftime(obj.tot_time, os_date_format)}'
+        result = obj.join_str(obj.training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str)
+        return result
+
+    @staticmethod
+    def add_date_time_csv_unit(is_dist, result):
+        '''Add unit specifier needed for CSV'''
+        if is_dist:
+            result += ' -  D'
+        else:
+            result += ' -  T'
+        return result
+
+    @staticmethod
+    def join_str(training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str):
+        '''Create string depending on trainings'''
+        if training == 10:
+            training_str += happy_face_str + happy_face_str + happy_face_str
+        elif training == 11:
+            training_str += happy_face_str + happy_face_str + dst_or_time_str
+        elif training == 12:
+            training_str += hr_str + happy_face_str + dst_or_time_str
+        else:
+            training_str += hr_str + cadence_str + dst_or_time_str
+        return training_str
 
 class Saltos(Entrenamiento):
     '''Saltos Class'''
@@ -153,22 +175,22 @@ class Saltos(Entrenamiento):
     dst_dwn = MinMaxRange(0,9999)
     dst_up = MinMaxRange(0,9999)
 
-    def __init__(self, training, hearth_rate, cadence, tot_time_or_miles, cadence_up, time_or_dst_dwn, time_or_dst_up):
-        super().__init__(training, hearth_rate, cadence, tot_time_or_miles)
+    def __init__(self, training, hearth_rate, cadence, tot_time_or_dist, cadence_up, time_or_dst_dwn, time_or_dst_up):
+        super().__init__(training, hearth_rate, cadence, tot_time_or_dist)
         self.cadence_up = cadence_up
-        if self.check_coherent_time(tot_time_or_miles, time_or_dst_dwn, time_or_dst_up):
+        if self.check_coherent_time(tot_time_or_dist, time_or_dst_dwn, time_or_dst_up):
             raise ArithmeticError
         self.set_time_or_distance(time_or_dst_dwn, time_or_dst_up)
 
     def set_time_or_distance(self, time_or_dst_dwn, time_or_dst_up):
         '''Set Jumps distance or time'''
-        if self.is_miles:
+        if self.is_dist:
             self.save_jump_dst(time_or_dst_dwn, time_or_dst_up)
         else:
             self.save_jump_time(time_or_dst_dwn, time_or_dst_up)
 
     def save_jump_dst(self, time_or_dst_dwn, time_or_dst_up):
-        '''save jump miles in object'''
+        '''save jump dist in object'''
         self.dst_dwn = time_or_dst_dwn
         self.dst_up = time_or_dst_up
         self.time_dwn = '0'
@@ -187,13 +209,13 @@ class Saltos(Entrenamiento):
 
     def get_num_jump(self):
         '''Get number of jumps'''
-        if self.is_miles:
+        if self.is_dist:
             num_jumps = self.tot_distance / (self.dst_dwn + self.dst_up)
         else:
             tot_time_delta = timedelta(
                 minutes=self.tot_time.minute, seconds=self.tot_time.second)
             num_jumps = tot_time_delta / (timedelta(seconds=self.time_dwn.second) +
-                                      timedelta(seconds=self.time_up.second))
+timedelta(seconds=self.time_up.second))
         return f'{int(num_jumps)}'
 
     def get_jump_time_str(self):
@@ -205,7 +227,7 @@ class Saltos(Entrenamiento):
 
     def get_jump_time_or_dst_str(self):
         '''Select which unit to return'''
-        if self.is_miles:
+        if self.is_dist:
             return self.get_jump_dst_str()
         else:
             return self.get_jump_time_str()
@@ -214,14 +236,14 @@ class Saltos(Entrenamiento):
         '''Get jump distance string'''
         return f'{self.dst_dwn}/{self.dst_up} M'
 
-    def check_coherent_time(self, tot_time_or_miles, time_or_dst_dwn, time_or_dst_up):
+    def check_coherent_time(self, tot_time_or_dist, time_or_dst_dwn, time_or_dst_up):
         '''Check if total time is divisible between time down plus time up'''
-        if self.is_miles:
-            dlt_tot = int(tot_time_or_miles)
+        if self.is_dist:
+            dlt_tot = int(tot_time_or_dist)
             dlt_dwn = int(time_or_dst_dwn)
             dlt_up = int(time_or_dst_up)
         else:
-            tm_tot = self.convert_to_time(tot_time_or_miles)
+            tm_tot = self.convert_to_time(tot_time_or_dist)
             tm_dwn = self.convert_to_time(time_or_dst_dwn)
             tm_up = self.convert_to_time(time_or_dst_up)
             dlt_tot = timedelta(minutes=tm_tot.minute, seconds=tm_tot.second)
@@ -253,53 +275,42 @@ class Saltos(Entrenamiento):
     def __str__(self):
         # Al imprimir la instancia en el descriptor provoca un error de atributo por aun no estar definidos todos los valores.
         try:
-            if self.is_miles:
-                return f'T: {self.training}, \
-{self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
-{self.tot_distance}, \
-{self.dst_dwn}/\
-{self.dst_up}'
+            if self.is_dist:
+                return f'T: {self.training}, {self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
+{self.tot_distance}, {self.dst_dwn}/{self.dst_up}'
             else:
-                return f'T: {self.training}, \
-{self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
+                return f'T: {self.training}, {self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
 {datetime.strftime(self.tot_time, "%-M:%-S")}, \
 {datetime.strftime(self.time_dwn, "%-S")}/\
 {datetime.strftime(self.time_up, "%-S")}'
         except AttributeError:
             return object.__str__(self)
         except ValueError:
-            if self.is_miles:
-                return f'T: {self.training}, \
-{self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
-{self.tot_distance}, \
-{self.dst_dwn}/\
-{self.dst_up}'
+            if self.is_dist:
+                return f'T: {self.training}, {self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
+{self.tot_distance}, {self.dst_dwn}/{self.dst_up}'
             else:
-                return f'T: {self.training}, \
-{self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
+                return f'T: {self.training}, {self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
 {datetime.strftime(self.tot_time, "%#M:%#S")}, \
 {datetime.strftime(self.time_dwn, "%#S")}/\
 {datetime.strftime(self.time_up, "%#S")}'
 
     def __repr__(self):
         try:
+            if self.is_dist:
+                return f'{self.training} {self.hearth_rate} {self.cadence}/{self.cadence_up} \
+{self.tot_distance} {self.dst_dwn}/{self.dst_up}'
             return f'{self.training} {self.hearth_rate} {self.cadence}/{self.cadence_up} \
 {datetime.strftime(self.tot_time, "%-M:%-S")}  \
 {datetime.strftime(self.time_dwn, "%-M:%-S")}/\
-{datetime.strftime(self.time_up, "%-M:%-S")}\
-{self.tot_distance}, \
-{self.dst_dwn}/\
-{self.dst_up}'
+{datetime.strftime(self.time_up, "%-M:%-S")}'
         except AttributeError:
             return object.__repr__(self)
         except ValueError:
             return f'{self.training} {self.hearth_rate} {self.cadence}/{self.cadence_up} \
 {datetime.strftime(self.tot_time, "%#M:%#S")}  \
 {datetime.strftime(self.time_dwn, "%#M:%#S")}/\
-{datetime.strftime(self.time_up, "%#M:%#S")}\
-{self.tot_distance}, \
-{self.dst_dwn}/\
-{self.dst_up}'
+{datetime.strftime(self.time_up, "%#M:%#S")}'
 
 
 class CicloDeEntrenamiento():
@@ -324,7 +335,7 @@ class CicloDeEntrenamiento():
         '''Calculates the total time of the training.'''
         self.tot_class_time = timedelta()
         for trng in self.training_list:
-            if isinstance(trng, Entrenamiento) and not trng.is_miles:
+            if isinstance(trng, Entrenamiento) and not trng.is_dist:
                 if trng.get_training() not in [10]:
                     self.tot_class_time += timedelta(
                         minutes=trng.tot_time.minute,
@@ -337,7 +348,7 @@ class CicloDeEntrenamiento():
         '''Calculates the total distance of the training.'''
         self.tot_class_distance = 0
         for trng in self.training_list:
-            if isinstance(trng, Entrenamiento) and trng.is_miles:
+            if isinstance(trng, Entrenamiento) and trng.is_dist:
                 if trng.get_training() not in [10]:
                     self.tot_class_distance += trng.tot_distance
             elif isinstance(trng, CicloDeEntrenamiento):

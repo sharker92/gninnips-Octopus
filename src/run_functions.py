@@ -32,18 +32,18 @@ def split_jump_data(data):
     return tmp_trnng, tmp_hrth_rate, tmp_cad_dwn, tmp_tot_tme, tmp_cad_up, tmp_tme_dwn, tmp_tme_up
 
 
-def create_trnng_obj(data):
+def create_trnng_obj(data, default_time_or_dist = None):
     '''Creates the indicated training object'''
     if data[0] in ('5', '7'):
         try:
             tmp_train = Saltos(*split_jump_data(data))
-        except ValueError as error:
+        except (ValueError, IndexError) as error:
             raise NumDataError from error
         except ArithmeticError as error:
             raise NoValidTimeError from error
     else:
         try:
-            tmp_train = Entrenamiento(*data)
+            tmp_train = Entrenamiento(*data, default_time_or_dist)
         except TypeError as error:
             raise NumDataError from error
     return tmp_train
@@ -62,22 +62,24 @@ def split_data(data):
         if comm in ['s', 'i', 'f', 'e', 'c', 'w', 'd', 't', 'h', 'g', 'r', 'a']:
             return comm
         raise CommandError
-    elif len(splt_data) == 1 and comm.isdigit() and len(comm) == 2:
-        if comm == '10':
-            return [comm, '50', '60', '60']
-        raise CommandError
-    elif len(splt_data) == 2 and comm.isdigit() and len(comm) == 2:
-        if comm == '11':
-            return [comm, '50', '60', splt_data[1]]
-        raise CommandError
-    elif len(splt_data) == 3 and comm.isdigit() and len(comm) == 2:
-        if comm == '12':
-            return [comm, splt_data[1], '60', splt_data[2]]
+    elif len(splt_data) in (1, 2, 3) and comm.isdigit() and len(comm) == 2:
+        result = set_caritas_default_values(comm, splt_data)
+        if result is not None:
+            return result
         raise CommandError
     elif len(splt_data) in (4, 5, 6):
         return splt_data
     raise NumDataError
 
+def set_caritas_default_values(comm, splt_data):
+    '''Set default values for caritas trainings'''
+    if comm == '10' and len(splt_data) == 1:
+        return [comm, '50', '60', '60']
+    elif comm == '11' and len(splt_data) == 2:
+        return [comm, '50', '60', splt_data[1]]
+    elif comm == '12' and len(splt_data) == 3:
+        return [comm, splt_data[1], '60', splt_data[2]]
+    return None
 
 def split_data_simple(data):
     '''Splits data by space and return data for training'''

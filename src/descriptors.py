@@ -40,7 +40,7 @@ class IsTime():
         self.__field_name = name
 
     def __set__(self, instance, value) -> None:
-        if instance.is_miles:
+        if instance.is_dist:
             value = datetime.strptime('0', '%S')
         else:
             try:
