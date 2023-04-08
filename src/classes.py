@@ -112,20 +112,15 @@ class Entrenamiento():
                 dst_or_time_str = f', {self.tot_distance}'
             else:
                 dst_or_time_str = f', {datetime.strftime(self.tot_time, "%-M:%-S")}'
-            if self.training == 10:
-                training_str += happy_face_str
-            elif self.training == 11:
-                training_str += happy_face_str + happy_face_str + dst_or_time_str
-            elif self.training == 12:
-                training_str += hr_str + happy_face_str + dst_or_time_str
-            else:
-                training_str += hr_str + cadence_str + dst_or_time_str
-            return training_str
+            return create_str_mac(self.training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str)
         except AttributeError:
             return object.__str__(self)
         except ValueError:
-            return f'T: {self.training}, {self.hearth_rate}%, \
-{self.cadence}rpm, {datetime.strftime(self.tot_time, "%#M:%#S")} {self.tot_distance}'
+            if self.is_miles:
+                dst_or_time_str = f', {self.tot_distance}'
+            else:
+                dst_or_time_str = f', {datetime.strftime(self.tot_time, "%#M:%#S")}'
+            return create_str_mac(self.training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str)
 
     def __repr__(self):
         try:
@@ -134,9 +129,21 @@ class Entrenamiento():
         except AttributeError:
             return object.__repr__(self)
         except ValueError:
+            # Windows Printing
             return f'{self.training} {self.hearth_rate} \
 {self.cadence} {datetime.strftime(self.tot_time, "%#M:%#S")} {self.tot_distance}'
 
+def create_str_mac(training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str):
+    '''Create string depending on trainings'''
+    if training == 10:
+        training_str += happy_face_str
+    elif training == 11:
+        training_str += happy_face_str + happy_face_str + dst_or_time_str
+    elif training == 12:
+        training_str += hr_str + happy_face_str + dst_or_time_str
+    else:
+        training_str += hr_str + cadence_str + dst_or_time_str
+    return training_str
 
 class Saltos(Entrenamiento):
     '''Saltos Class'''
@@ -261,14 +268,18 @@ class Saltos(Entrenamiento):
         except AttributeError:
             return object.__str__(self)
         except ValueError:
-            return f'T: {self.training}, \
+            if self.is_miles:
+                return f'T: {self.training}, \
 {self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
-{datetime.strftime(self.tot_time, "%#M:%#S")}, \
-{datetime.strftime(self.time_dwn, "%#S")}/\
-{datetime.strftime(self.time_up, "%#S")}\
 {self.tot_distance}, \
 {self.dst_dwn}/\
 {self.dst_up}'
+            else:
+                return f'T: {self.training}, \
+{self.hearth_rate}%, {self.cadence}/{self.cadence_up}rpm, \
+{datetime.strftime(self.tot_time, "%#M:%#S")}, \
+{datetime.strftime(self.time_dwn, "%#S")}/\
+{datetime.strftime(self.time_up, "%#S")}'
 
     def __repr__(self):
         try:
@@ -314,9 +325,10 @@ class CicloDeEntrenamiento():
         self.tot_class_time = timedelta()
         for trng in self.training_list:
             if isinstance(trng, Entrenamiento) and not trng.is_miles:
-                self.tot_class_time += timedelta(
-                    minutes=trng.tot_time.minute,
-                    seconds=trng.tot_time.second)
+                if trng.get_training() not in [10]:
+                    self.tot_class_time += timedelta(
+                        minutes=trng.tot_time.minute,
+                        seconds=trng.tot_time.second)
             elif isinstance(trng, CicloDeEntrenamiento):
                 self.tot_class_time += trng.tot_class_time
         self.tot_class_time *= self.repetitions
@@ -326,7 +338,8 @@ class CicloDeEntrenamiento():
         self.tot_class_distance = 0
         for trng in self.training_list:
             if isinstance(trng, Entrenamiento) and trng.is_miles:
-                self.tot_class_distance += trng.tot_distance
+                if trng.get_training() not in [10]:
+                    self.tot_class_distance += trng.tot_distance
             elif isinstance(trng, CicloDeEntrenamiento):
                 self.tot_class_distance += trng.tot_class_distance
         self.tot_class_distance *= self.repetitions
