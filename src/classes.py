@@ -112,12 +112,13 @@ class Entrenamiento():
             hr_str = f', {self.hearth_rate}%'
             cadence_str = f', {self.cadence}rpm'
             mac_date_str_format = "%-M:%-S"
-            return self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, mac_date_str_format)
+            date_joiner = ','
+            return self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, mac_date_str_format, date_joiner)
         except AttributeError:
             return object.__str__(self)
         except ValueError:
             windows_date_str_format = "%#M:%#S"
-            return self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, windows_date_str_format)
+            return self.create_str(self, training_str,  happy_face_str, hr_str, cadence_str, windows_date_str_format, date_joiner)
 
     def __repr__(self):
         try:
@@ -136,12 +137,12 @@ class Entrenamiento():
             return self.add_date_time_csv_unit(self.is_dist, result)
 
     @staticmethod
-    def create_str(obj, training_str,  happy_face_str, hr_str, cadence_str, os_date_format):
+    def create_str(obj, training_str,  happy_face_str, hr_str, cadence_str, os_date_format, date_joiner = ''):
         '''Create str with specific OS date format'''
         if obj.is_dist:
             dst_or_time_str = f' {obj.tot_distance}'
         else:
-            dst_or_time_str = f' {datetime.strftime(obj.tot_time, os_date_format)}'
+            dst_or_time_str = f'{date_joiner} {datetime.strftime(obj.tot_time, os_date_format)}'
         result = obj.join_str(obj.training, happy_face_str, training_str, hr_str, cadence_str, dst_or_time_str)
         return result
 
